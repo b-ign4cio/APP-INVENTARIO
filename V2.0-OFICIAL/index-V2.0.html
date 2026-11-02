@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1f2b1b" />
+  <title>FerreControl PRO — Ferretería, Pesca y Caza</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              950: '#141c11',
+              900: '#1f2b1b',
+              800: '#2d3e27',
+              700: '#3f5636',
+              600: '#537047',
+              500: '#6b8c5c',
+              100: '#e3ece0',
+              50: '#f2f6f0'
+            },
+            terra: {
+              900: '#3b2818',
+              800: '#593d25',
+              700: '#785233',
+              600: '#9c6b43',
+              500: '#c28452',
+              400: '#d49b6a',
+              200: '#e8d8c5',
+              100: '#f3ebe0',
+              50: '#faf6f0'
+            },
+            khaki: {
+              900: '#3d392b',
+              700: '#6e674f',
+              500: '#9e9574',
+              300: '#d4ccb3',
+              200: '#e6e0cc',
+              100: '#f2efe4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f2efe4;
+      color: #1f2b1b;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (max-width: 767px) {
+      body {
+        padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+      }
+    }
+
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Patrón de Camuflaje Táctico / Bosque y Terra */
+    .bg-camo-header {
+      background-color: #1f2b1b;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Crect width='240' height='240' fill='%231f2b1b'/%3E%3Cpath d='M0 40 C50 20, 80 70, 140 50 C190 30, 210 80, 240 60 L240 130 C190 150, 150 100, 90 120 C40 140, 20 90, 0 110 Z' fill='%232d3e27'/%3E%3Cpath d='M40 0 C70 40, 130 30, 160 80 C190 130, 120 170, 150 240 L70 240 C50 190, 90 140, 50 90 C20 50, 10 20, 40 0 Z' fill='%234b3826' opacity='0.75'/%3E%3Cpath d='M130 140 C170 120, 220 150, 240 190 L240 240 L120 240 C100 200, 90 160, 130 140 Z' fill='%233f5636' opacity='0.85'/%3E%3Cpath d='M0 160 C40 150, 80 180, 70 220 C60 240, 20 240, 0 240 Z' fill='%236b553b' opacity='0.65'/%3E%3Cpath d='M160 10 C200 0, 230 30, 220 70 C210 100, 160 90, 140 60 C120 30, 130 20, 160 10 Z' fill='%236b553b' opacity='0.6'/%3E%3C/svg%3E");
+      background-size: 260px 260px;
+    }
+
+    /* Cinta superior de camuflaje tierra/oliva */
+    .bg-camo-strip {
+      background-color: #593d25;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23593d25'/%3E%3Cpath d='M0 30 C40 10, 70 50, 110 30 C150 10, 160 60, 180 40 L180 100 C140 110, 110 80, 60 100 C20 115, 10 80, 0 90 Z' fill='%233f5636'/%3E%3Cpath d='M30 110 C70 95, 110 130, 150 115 C170 108, 180 140, 180 180 L10 180 C0 150, 10 120, 30 110 Z' fill='%23856a4b'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
+
+    .camo-badge {
+      background: linear-gradient(135deg, #2d3e27 0%, #593d25 50%, #3f5636 100%);
+      color: #f3ebe0;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #printableArea,
+      #printableArea * {
+        visibility: visible;
+      }
+
+      #printableArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+  <!-- Barra Superior Camuflaje Tierra / Oliva -->
+  <div class="bg-camo-strip text-terra-50 px-4 py-1.5 text-xs font-semibold flex flex-wrap items-center justify-between gap-2 border-b border-forest-950 no-print">
+    <div class="flex items-center gap-2">
+      <span class="bg-forest-950 text-terra-400 px-2.5 py-0.5 rounded font-bold uppercase tracking-wider border border-terra-700">
+        <i class="fa-solid fa-compass mr-1"></i>Ferretería, Pesca y Caza
+      </span>
+      <span class="drop-shadow hidden sm:inline">Herramientas, materiales de obra, pesca deportiva y caza.</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="exportBackupJSON()" class="bg-forest-950/80 hover:bg-forest-950 text-terra-200 px-2.5 py-0.5 rounded border border-terra-700/60 font-semibold transition" title="Guardar copia de seguridad en el dispositivo">
+        <i class="fa-solid fa-download mr-1"></i>Respaldo
+      </button>
+      <label class="bg-forest-950/80 hover:bg-forest-950 text-terra-200 px-2.5 py-0.5 rounded border border-terra-700/60 font-semibold transition cursor-pointer" title="Cargar copia de seguridad">
+        <i class="fa-solid fa-upload mr-1"></i>Cargar
+        <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden" />
+      </label>
+    </div>
+  </div>
+
+  <!-- Header Principal con Camuflaje Bosque/Terra (Adaptable PC y Móvil) -->
+  <header class="bg-camo-header text-terra-50 shadow-xl border-b-4 border-terra-700 sticky top-0 z-40 md:static no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 md:py-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-terra-600 text-terra-50 border-2 border-terra-400 flex items-center justify-center text-lg md:text-xl font-black shadow-lg shrink-0">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-extrabold tracking-tight flex flex-wrap items-center gap-2 drop-shadow">
+            FERRECONTROL <span class="text-terra-400">PRO</span>
+            <span class="text-[11px] bg-forest-950/90 text-khaki-200 px-2.5 py-0.5 rounded-full font-medium border border-forest-700 hidden sm:inline-flex items-center">
+              <i class="fa-solid fa-fish-fins text-terra-400 mr-1"></i>Ferretería · Pesca · Caza
+            </span>
+          </h1>
+          <p class="text-[11px] md:text-xs text-khaki-200 font-medium">Gestión de Inventario, Venta Fraccionada, y cotizador</p>
+        </div>
+      </div>
+
+      <!-- Navegación por Pestañas en PC (Oculta en móvil porque usa barra inferior táctil) -->
+      <nav class="hidden md:flex items-center gap-1 bg-forest-950/90 p-1.5 rounded-xl border border-forest-700 shadow-inner">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 bg-terra-600 text-white shadow">
+          <i class="fa-solid fa-chart-pie"></i> Resumen
+        </button>
+        <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-khaki-200 hover:text-white">
+          <i class="fa-solid fa-boxes-stacked"></i> Inventario
+        </button>
+        <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-khaki-200 hover:text-white">
+          <i class="fa-solid fa-cash-register"></i> Caja / Cotizador
+          <span id="cart-badge" class="bg-terra-500 text-white text-xs font-extrabold px-1.5 py-0.2 rounded-full hidden">0</span>
+        </button>
+        <button onclick="switchTab('movements')" id="tab-movements" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-khaki-200 hover:text-white">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial
+        </button>
+      </nav>
+
+      <!-- Acciones Rápidas (PC y Móvil) -->
+      <div class="flex items-center gap-2">
+        <button onclick="openProductModal()" class="bg-terra-600 hover:bg-terra-500 text-white border border-terra-400 font-bold px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-xs md:text-sm shadow-md flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-plus"></i> Nuevo Producto
+        </button>
+        <button onclick="exportCSV()" class="bg-forest-950/90 hover:bg-forest-800 text-khaki-100 border border-forest-700 font-semibold px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm transition" title="Exportar Planilla para Excel">
+          <i class="fa-solid fa-file-excel text-forest-500 mr-1"></i> Excel
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="max-w-7xl w-full mx-auto px-3.5 sm:px-4 py-5 flex-1 no-print">
+
+    <!-- ==================== SECCIÓN 1: DASHBOARD ==================== -->
+    <section id="view-dashboard" class="space-y-6">
+      <!-- KPIs con Colores Planos Verdosos y Terra -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-terra-50 p-4 sm:p-5 rounded-2xl shadow-sm border-2 border-khaki-300 flex items-center justify-between">
+          <div>
+            <p class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-khaki-700">Total Productos</p>
+            <p id="kpi-total-skus" class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-1">0</p>
+            <p class="text-[11px] text-forest-700 font-medium mt-1">SKUs registrados</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-forest-800 text-terra-100 flex items-center justify-center text-lg sm:text-xl shadow shrink-0">
+            <i class="fa-solid fa-compass"></i>
+          </div>
+        </div>
+
+        <div class="bg-terra-50 p-4 sm:p-5 rounded-2xl shadow-sm border-2 border-khaki-300 flex items-center justify-between">
+          <div>
+            <p class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-khaki-700">Costo Bodega</p>
+            <p id="kpi-inventory-cost" class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-1">$0</p>
+            <p class="text-[11px] text-khaki-700 mt-1">Capital invertido</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-terra-700 text-terra-50 flex items-center justify-center text-lg sm:text-xl shadow shrink-0">
+            <i class="fa-solid fa-sack-dollar"></i>
+          </div>
+        </div>
+
+        <div class="bg-forest-900 text-terra-50 p-4 sm:p-5 rounded-2xl shadow-sm border-2 border-forest-700 flex items-center justify-between">
+          <div>
+            <p class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-khaki-300">Valor Venta</p>
+            <p id="kpi-inventory-sale" class="text-2xl sm:text-3xl font-extrabold text-terra-400 mt-1">$0</p>
+            <p id="kpi-expected-profit" class="text-[11px] text-forest-100 font-semibold mt-1">Margen: $0</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-terra-600 text-white flex items-center justify-center text-lg sm:text-xl shadow shrink-0">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+        </div>
+
+        <div class="bg-terra-50 p-4 sm:p-5 rounded-2xl shadow-sm border-2 border-terra-600 flex items-center justify-between">
+          <div>
+            <p class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-terra-700">Stock Crítico</p>
+            <p id="kpi-low-stock" class="text-2xl sm:text-3xl font-extrabold text-terra-800 mt-1">0</p>
+            <p class="text-[11px] text-khaki-700 mt-1">Por reponer</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-terra-200 text-terra-800 flex items-center justify-center text-lg sm:text-xl shrink-0">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila Inferior Dashboard: Stock Crítico + Distribución por Categorías -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Lista de Reposición Urgente -->
+        <div class="lg:col-span-2 bg-terra-50 rounded-2xl shadow-sm border-2 border-khaki-300 overflow-hidden">
+          <div class="px-4 sm:px-6 py-4 bg-forest-900 text-terra-50 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                <i class="fa-solid fa-bell text-terra-400"></i> Productos con Stock Bajo o Agotado
+              </h2>
+              <p class="text-xs text-khaki-300">Insumos clave de ferretería, pesca y caza por reponer</p>
+            </div>
+            <button onclick="switchTab('inventory'); document.getElementById('filter-stock').value='low'; renderInventory();" class="text-xs font-bold text-terra-400 hover:underline">
+              Ver inventario →
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-khaki-200 text-forest-900 text-xs uppercase font-bold">
+                <tr>
+                  <th class="py-3 px-4">Producto</th>
+                  <th class="py-3 px-3 whitespace-nowrap">Ubicación</th>
+                  <th class="py-3 px-3 whitespace-nowrap">Rubro</th>
+                  <th class="py-3 px-3 text-center whitespace-nowrap">Actual / Mín.</th>
+                  <th class="py-3 px-4 text-right whitespace-nowrap">Acción Rápida</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-low-stock-body" class="divide-y divide-khaki-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Resumen por Rubro -->
+        <div class="bg-terra-50 rounded-2xl shadow-sm border-2 border-khaki-300 overflow-hidden">
+          <div class="px-6 py-4 bg-camo-header text-terra-50">
+            <h2 class="font-bold flex items-center gap-2">
+              <i class="fa-solid fa-layer-group text-terra-400"></i> Valor por Rubro
+            </h2>
+            <p class="text-xs text-khaki-200">Ferretería · Pesca · Caza y Outdoor</p>
+          </div>
+          <div id="category-breakdown" class="p-6 space-y-3.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECCIÓN 2: INVENTARIO COMPLETO (PC TABLA + MÓVIL TARJETAS) ==================== -->
+    <section id="view-inventory" class="space-y-4 hidden">
+      <!-- Barra de Filtros y Búsqueda Inteligente -->
+      <div class="bg-terra-50 p-4 rounded-2xl shadow-sm border-2 border-khaki-300 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <div class="md:col-span-5 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-khaki-700"></i>
+          <input type="text" id="search-input" oninput="renderInventory()"
+            placeholder="Buscar caña, postones, anzuelo, taladro, tornillo, pasillo..."
+            class="w-full pl-10 pr-4 py-2 rounded-xl border border-khaki-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-forest-700" />
+        </div>
+
+        <div class="grid grid-cols-2 md:contents gap-2">
+          <div class="md:col-span-3">
+            <select id="filter-category" onchange="renderInventory()"
+              class="w-full py-2 px-3 rounded-xl border border-khaki-300 text-xs sm:text-sm bg-white font-semibold text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-700">
+              <option value="all">Todos los Rubros</option>
+              <option value="Pesca Deportiva">🎣 Pesca Deportiva y Río/Mar</option>
+              <option value="Caza y Outdoor">🦌 Caza, Armería Menor y Camping</option>
+              <option value="Herramientas">🛠️ Herramientas Manuales y Eléctricas</option>
+              <option value="Tornillería y Fijaciones">🔩 Tornillería y Fijaciones (Granel)</option>
+              <option value="Gasfitería y Agua">🚰 Gasfitería y Agua</option>
+              <option value="Electricidad e Iluminación">⚡ Electricidad e Iluminación</option>
+              <option value="Construcción y Pinturas">🧱 Construcción y Pinturas</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <select id="filter-stock" onchange="renderInventory()"
+              class="w-full py-2 px-3 rounded-xl border border-khaki-300 text-xs sm:text-sm bg-white font-semibold text-forest-900 focus:outline-none focus:ring-2 focus:ring-forest-700">
+              <option value="all">Cualquier Stock</option>
+              <option value="low">⚠️ Stock Crítico / Bajo</option>
+              <option value="out">🚨 Agotados (0)</option>
+              <option value="ok">✅ Stock Óptimo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="md:col-span-2 flex md:block items-center justify-between text-right">
+          <span id="inventory-count-label" class="text-xs font-bold text-forest-800">Mostrando 0 ítems</span>
+        </div>
+      </div>
+
+      <!-- Vista Tabla para PC / Pantallas Medianas y Grandes -->
+      <div class="hidden md:block bg-terra-50 rounded-2xl shadow-sm border-2 border-khaki-300 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-camo-header text-terra-100 text-xs uppercase">
+              <tr>
+                <th class="py-3.5 px-4">SKU / Producto</th>
+                <th class="py-3.5 px-4">Rubro</th>
+                <th class="py-3.5 px-4">Ubicación Física</th>
+                <th class="py-3.5 px-4 text-right">Costo</th>
+                <th class="py-3.5 px-4 text-right">Precio Venta</th>
+                <th class="py-3.5 px-4 text-center">Stock Disponible</th>
+                <th class="py-3.5 px-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-table-body" class="divide-y divide-khaki-200"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Vista Tarjetas Táctiles para Teléfono (iPhone / Android) -->
+      <div id="inventory-mobile-cards" class="md:hidden space-y-3"></div>
+    </section>
+
+    <!-- ==================== SECCIÓN 3: PUNTO DE VENTA Y COTIZADOR ==================== -->
+    <section id="view-pos" class="hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Catálogo Rápido Izquierdo -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="bg-terra-50 p-4 rounded-2xl shadow-sm border-2 border-khaki-300">
+            <label class="block text-xs font-bold uppercase text-forest-800 mb-1">Buscador Rápido de Mostrador (Ferretería, Pesca y Caza)</label>
+            <div class="relative">
+              <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-khaki-700"></i>
+              <input type="text" id="pos-search" oninput="renderPOSCatalog()"
+                placeholder="Escribe producto, calibre, medida o código (ej. 'poston', 'caña', 'cable', 'clavo')..."
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-khaki-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-forest-700" />
+            </div>
+          </div>
+
+          <div id="pos-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[540px] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Carrito / Cotizador Derecho -->
+        <div class="lg:col-span-5 bg-terra-50 rounded-2xl shadow-sm border-2 border-khaki-300 flex flex-col h-fit overflow-hidden">
+          <div class="p-4 bg-camo-header text-white flex items-center justify-between">
+            <div>
+              <h2 class="font-bold text-base flex items-center gap-2">
+                <i class="fa-solid fa-cart-shopping text-terra-400"></i> Ticket de Venta / Cotización
+              </h2>
+              <p class="text-xs text-khaki-200">Soporta venta por unidad, metro (lienza/cable) o kilo</p>
+            </div>
+            <button onclick="clearCart()" class="text-xs text-khaki-200 hover:text-terra-400 font-semibold">
+              <i class="fa-solid fa-trash-can mr-1"></i>Vaciar
+            </button>
+          </div>
+
+          <!-- Datos Opcionales del Cliente y Medio de Pago -->
+          <div class="p-4 bg-khaki-100 border-b border-khaki-300 space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="client-name" placeholder="Cliente / Maestro / Deportista"
+                class="px-3 py-1.5 rounded-lg border border-khaki-300 text-xs bg-white" />
+              <input type="text" id="client-doc" placeholder="RUT / DNI / Teléfono"
+                class="px-3 py-1.5 rounded-lg border border-khaki-300 text-xs bg-white" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <select id="payment-method" class="px-3 py-1.5 rounded-lg border border-khaki-300 text-xs bg-white font-semibold text-forest-900">
+                <option value="Efectivo">💵 Pago: Efectivo</option>
+                <option value="Tarjeta Débito/Crédito">💳 Pago: Tarjeta / Redcompra</option>
+                <option value="Transferencia">🏦 Pago: Transferencia</option>
+              </select>
+              <input type="number" id="cash-received" oninput="renderCart()" placeholder="Paga con $ (calcular vuelto)"
+                class="px-3 py-1.5 rounded-lg border border-khaki-300 text-xs bg-white" />
+            </div>
+          </div>
+
+          <!-- Items del Carrito -->
+          <div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto divide-y divide-khaki-200"></div>
+
+          <!-- Totales y Descuento -->
+          <div class="p-4 border-t border-khaki-300 bg-khaki-100 space-y-2">
+            <div class="flex justify-between items-center text-xs text-forest-900 font-medium">
+              <span>Descuento Cliente Frecuente / Maestro (%)</span>
+              <input type="number" id="pos-discount" value="0" min="0" max="50" oninput="renderCart()"
+                class="w-16 text-right px-2 py-1 rounded border border-khaki-300 bg-white font-bold" />
+            </div>
+            <div class="flex justify-between text-xs text-khaki-700">
+              <span>Subtotal Neto:</span>
+              <span id="cart-net">$0</span>
+            </div>
+            <div class="flex justify-between text-xs text-khaki-700">
+              <span>IVA (19% incluido):</span>
+              <span id="cart-tax">$0</span>
+            </div>
+            <div class="flex justify-between text-lg font-extrabold text-forest-950 pt-1 border-t border-khaki-300">
+              <span>TOTAL A PAGAR:</span>
+              <span id="cart-total" class="text-terra-700">$0</span>
+            </div>
+            <div id="cash-change-row" class="hidden flex justify-between text-xs font-bold text-forest-800 bg-forest-100 px-2.5 py-1 rounded-lg">
+              <span>Vuelto a entregar:</span>
+              <span id="cart-change">$0</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-3">
+              <button onclick="printQuote()"
+                class="bg-terra-800 hover:bg-terra-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-file-invoice"></i> Imprimir Cotización
+              </button>
+              <button onclick="completeSale()"
+                class="bg-forest-700 hover:bg-forest-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow transition">
+                <i class="fa-solid fa-check-circle"></i> Confirmar Venta
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECCIÓN 4: HISTORIAL DE MOVIMIENTOS ==================== -->
+    <section id="view-movements" class="hidden space-y-4">
+      <div class="bg-terra-50 rounded-2xl shadow-sm border-2 border-khaki-300 overflow-hidden">
+        <div class="px-4 sm:px-6 py-4 bg-camo-header text-white flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-bold">Kardex / Historial de Movimientos</h2>
+            <p class="text-xs text-khaki-200">Registro de ventas de mostrador, ingresos de bodega y cotizaciones</p>
+          </div>
+          <button onclick="exportMovementsCSV()" class="bg-forest-950/90 hover:bg-forest-800 text-khaki-100 border border-forest-700 font-semibold px-3 py-1.5 rounded-xl text-xs transition">
+            <i class="fa-solid fa-file-excel text-forest-500 mr-1"></i> Exportar Historial
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-khaki-200 text-forest-900 text-xs uppercase font-bold">
+              <tr>
+                <th class="py-3 px-4">Fecha / Hora</th>
+                <th class="py-3 px-4">Tipo</th>
+                <th class="py-3 px-4">Detalle / Producto</th>
+                <th class="py-3 px-4">Cliente / Pago</th>
+                <th class="py-3 px-4 text-right">Monto / Cantidad</th>
+              </tr>
+            </thead>
+            <tbody id="movements-table-body" class="divide-y divide-khaki-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== BARRA INFERIOR MÓVIL (SOLO VISIBLE EN TELÉFONOS) ==================== -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-camo-header text-khaki-200 border-t-2 border-terra-700 safe-bottom no-print">
+    <div class="grid grid-cols-4 h-16 bg-forest-950/85">
+      <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="flex flex-col items-center justify-center gap-1 text-terra-400 font-bold">
+        <i class="fa-solid fa-chart-pie text-base"></i>
+        <span class="text-[10px]">Resumen</span>
+      </button>
+      <button onclick="switchTab('inventory')" id="mob-nav-inventory" class="flex flex-col items-center justify-center gap-1 text-khaki-200">
+        <i class="fa-solid fa-boxes-stacked text-base"></i>
+        <span class="text-[10px]">Inventario</span>
+      </button>
+      <button onclick="switchTab('pos')" id="mob-nav-pos" class="relative flex flex-col items-center justify-center gap-1 text-khaki-200">
+        <i class="fa-solid fa-cash-register text-base"></i>
+        <span class="text-[10px]">Caja</span>
+        <span id="mob-cart-badge" class="hidden absolute top-1.5 right-6 bg-terra-500 text-white text-[10px] font-extrabold px-1.5 rounded-full">0</span>
+      </button>
+      <button onclick="switchTab('movements')" id="mob-nav-movements" class="flex flex-col items-center justify-center gap-1 text-khaki-200">
+        <i class="fa-solid fa-clock-rotate-left text-base"></i>
+        <span class="text-[10px]">Historial</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==================== MODAL CREAR / EDITAR PRODUCTO ==================== -->
+  <div id="product-modal"
+    class="fixed inset-0 bg-forest-950/70 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print overflow-y-auto">
+    <div class="bg-terra-50 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border-2 border-terra-700 my-auto">
+      <div class="bg-camo-header text-white px-6 py-4 flex items-center justify-between">
+        <h3 id="modal-title" class="font-bold text-base sm:text-lg flex items-center gap-2">
+          <i class="fa-solid fa-box-open text-terra-400"></i> Nuevo Producto (Ferretería / Pesca / Caza)
+        </h3>
+        <button onclick="closeProductModal()" class="text-khaki-200 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <form id="product-form" onsubmit="saveProduct(event)" class="p-4 sm:p-6 space-y-4">
+        <input type="hidden" id="prod-id" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Código SKU / Barras *</label>
+            <input type="text" id="prod-sku" required placeholder="Ej. PES-010 o CAZ-55"
+              class="w-full px-3 py-2 rounded-xl border border-khaki-300 bg-white text-sm" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Nombre y Especificación *</label>
+            <input type="text" id="prod-name" required
+              placeholder="Ej. Caña Spinning Telescópica 2.40m o Postones 5.5mm"
+              class="w-full px-3 py-2 rounded-xl border border-khaki-300 bg-white text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Rubro / Categoría *</label>
+            <select id="prod-category" class="w-full px-3 py-2 rounded-xl border border-khaki-300 text-sm bg-white">
+              <option value="Pesca Deportiva">Pesca Deportiva</option>
+              <option value="Caza y Outdoor">Caza y Outdoor</option>
+              <option value="Herramientas">Herramientas</option>
+              <option value="Tornillería y Fijaciones">Tornillería y Fijaciones</option>
+              <option value="Gasfitería y Agua">Gasfitería y Agua</option>
+              <option value="Electricidad e Iluminación">Electricidad e Iluminación</option>
+              <option value="Construcción y Pinturas">Construcción y Pinturas</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Unidad de Venta *</label>
+            <select id="prod-unit" class="w-full px-3 py-2 rounded-xl border border-khaki-300 text-sm bg-white">
+              <option value="un">Unidad (un)</option>
+              <option value="mt">Metro lineal (mt)</option>
+              <option value="kg">Kilogramo a granel (kg)</option>
+              <option value="lt">Litro (lt)</option>
+              <option value="caja">Caja / Lata / Pack</option>
+              <option value="saco">Saco / Bolsa</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Ubicación (Vitrina/Pasillo) *</label>
+            <input type="text" id="prod-location" required placeholder="Ej. Vitrina Caza B2 o Pasillo 2"
+              class="w-full px-3 py-2 rounded-xl border border-khaki-300 bg-white text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 bg-khaki-100 p-4 rounded-xl border border-khaki-300">
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Costo Compra ($) *</label>
+            <input type="number" id="prod-cost" required min="0" step="1" oninput="updateMarginPreview()"
+              placeholder="0" class="w-full px-3 py-2 rounded-xl border border-khaki-300 text-sm bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Precio Venta Público ($) *</label>
+            <input type="number" id="prod-price" required min="0" step="1" oninput="updateMarginPreview()"
+              placeholder="0"
+              class="w-full px-3 py-2 rounded-xl border border-khaki-300 text-sm bg-white font-bold text-forest-950" />
+          </div>
+          <div class="flex flex-col justify-center">
+            <span class="text-xs text-khaki-700">Margen de Ganancia:</span>
+            <span id="margin-preview" class="text-base font-extrabold text-forest-700">0% ($0)</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Stock Actual *</label>
+            <input type="number" id="prod-stock" required min="0" step="0.01" placeholder="0"
+              class="w-full px-3 py-2 rounded-xl border border-khaki-300 bg-white text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Stock Mínimo (Alerta) *</label>
+            <input type="number" id="prod-min" required min="0" step="0.01" placeholder="5"
+              class="w-full px-3 py-2 rounded-xl border border-khaki-300 bg-white text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-forest-900 uppercase mb-1">Proveedor Principal</label>
+            <input type="text" id="prod-supplier" placeholder="Ej. Shimano / Doite / Imperial"
+              class="w-full px-3 py-2 rounded-xl border border-khaki-300 bg-white text-sm" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-khaki-300">
+          <button type="button" onclick="closeProductModal()"
+            class="px-4 py-2 rounded-xl border border-khaki-300 text-forest-900 text-sm font-semibold hover:bg-khaki-200">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="px-5 py-2 rounded-xl bg-forest-800 hover:bg-forest-700 text-white text-sm font-bold shadow">
+            Guardar Producto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== ÁREA IMPRIMIBLE PARA COTIZACIONES ==================== -->
+  <div id="printableArea" class="hidden print:block p-8 bg-white text-slate-900">
+    <div class="flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-black uppercase">FERRETERÍA, PESCA Y CAZA — COTIZACIÓN</h1>
+        <p class="text-xs text-slate-600">Generado por FerreControl PRO</p>
+      </div>
+      <div class="text-right text-xs">
+        <p id="print-date" class="font-bold"></p>
+        <p id="print-client" class="mt-1"></p>
+      </div>
+    </div>
+    <table class="w-full text-left text-xs border-collapse mb-6">
+      <thead>
+        <tr class="border-b border-slate-400 uppercase">
+          <th class="py-2">Código</th>
+          <th class="py-2">Descripción Producto</th>
+          <th class="py-2 text-center">Cant.</th>
+          <th class="py-2 text-right">Precio Unit.</th>
+          <th class="py-2 text-right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody id="print-items-body" class="divide-y divide-slate-200"></tbody>
+    </table>
+    <div class="flex justify-end">
+      <div class="w-64 space-y-1 text-sm">
+        <div class="flex justify-between font-extrabold text-base border-t-2 border-slate-900 pt-2">
+          <span>TOTAL COTIZADO:</span>
+          <span id="print-total">$0</span>
+        </div>
+        <p class="text-[11px] text-slate-500 pt-2">* Valores incluyen IVA. Cotización válida por 5 días hábiles.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LÓGICA DE LA APLICACIÓN (INICIA EN CERO) ==================== -->
+  <script>
+    const STORAGE_KEY_PRODUCTS = 'ferrecontrol_pro_v2_clean_products';
+    const STORAGE_KEY_MOVEMENTS = 'ferrecontrol_pro_v2_clean_movements';
+
+    let products = [];
+    let movements = [];
+    let cart = [];
+
+    function formatCLP(num) {
+      return '$' + Math.round(num || 0).toLocaleString('es-CL');
+    }
+
+    function getCategoryBadge(cat) {
+      if (cat.includes('Pesca')) return 'bg-forest-100 text-forest-900 border border-forest-600/40';
+      if (cat.includes('Caza')) return 'camo-badge';
+      return 'bg-khaki-200 text-terra-900 border border-khaki-300';
+    }
+
+    function loadData() {
+      const savedProds = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+      const savedMovs = localStorage.getItem(STORAGE_KEY_MOVEMENTS);
+      products = savedProds ? JSON.parse(savedProds) : [];
+      movements = savedMovs ? JSON.parse(savedMovs) : [];
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
+      localStorage.setItem(STORAGE_KEY_MOVEMENTS, JSON.stringify(movements));
+      renderAll();
+    }
+
+    function switchTab(tabName) {
+      ['dashboard', 'inventory', 'pos', 'movements'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('hidden');
+        const pcBtn = document.getElementById('tab-' + t);
+        if (pcBtn) {
+          pcBtn.className = 'tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-khaki-200 hover:text-white';
+        }
+        const mobBtn = document.getElementById('mob-nav-' + t);
+        if (mobBtn) {
+          mobBtn.className = 'relative flex flex-col items-center justify-center gap-1 text-khaki-200';
+        }
+      });
+
+      document.getElementById('view-' + tabName).classList.remove('hidden');
+
+      const activePcBtn = document.getElementById('tab-' + tabName);
+      if (activePcBtn) {
+        activePcBtn.className = 'tab-btn px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 bg-terra-600 text-white shadow';
+      }
+      const activeMobBtn = document.getElementById('mob-nav-' + tabName);
+      if (activeMobBtn) {
+        activeMobBtn.className = 'relative flex flex-col items-center justify-center gap-1 text-terra-400 font-bold';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderAll();
+    }
+
+    function renderDashboard() {
+      const totalSkus = products.length;
+      const totalCost = products.reduce((sum, p) => sum + (p.cost * p.stock), 0);
+      const totalSale = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+      const lowStockItems = products.filter(p => p.stock <= p.minStock);
+
+      document.getElementById('kpi-total-skus').textContent = totalSkus;
+      document.getElementById('kpi-inventory-cost').textContent = formatCLP(totalCost);
+      document.getElementById('kpi-inventory-sale').textContent = formatCLP(totalSale);
+      document.getElementById('kpi-expected-profit').textContent = `Margen: ${formatCLP(totalSale - totalCost)}`;
+      document.getElementById('kpi-low-stock').textContent = lowStockItems.length;
+
+      const lowStockBody = document.getElementById('dashboard-low-stock-body');
+      if (products.length === 0) {
+        lowStockBody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-10 px-4 text-center">
+              <p class="text-sm font-bold text-forest-900">El inventario está en cero</p>
+              <p class="text-xs text-khaki-700 mt-1 mb-3">Comienza ingresando tus productos de ferretería, pesca o caza.</p>
+              <button onclick="openProductModal()" class="bg-terra-600 hover:bg-terra-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow inline-flex items-center gap-1.5">
+                <i class="fa-solid fa-plus"></i> Agregar Primer Producto
+              </button>
+            </td>
+          </tr>`;
+      } else if (lowStockItems.length === 0) {
+        lowStockBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-khaki-700 text-xs font-medium">¡Excelente! Todo el inventario está sobre el mínimo requerido.</td></tr>`;
+      } else {
+        lowStockBody.innerHTML = lowStockItems.map(p => `
+          <tr class="hover:bg-khaki-100/70">
+            <td class="py-3 px-4 min-w-[180px]">
+              <div class="font-bold text-forest-950 leading-snug">${p.name}</div>
+              <div class="text-xs text-khaki-700 font-mono mt-0.5">${p.sku}</div>
+            </td>
+            <td class="py-3 px-3 text-xs text-forest-900 whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5 bg-khaki-100 px-2.5 py-1 rounded-lg border border-khaki-300 font-medium">
+                <i class="fa-solid fa-location-dot text-terra-600"></i>${p.location}
+              </span>
+            </td>
+            <td class="py-3 px-3 text-xs whitespace-nowrap">
+              <span class="inline-block px-3 py-1 rounded-full text-[11px] font-bold leading-none ${getCategoryBadge(p.category)}">${p.category}</span>
+            </td>
+            <td class="py-3 px-3 text-center whitespace-nowrap">
+              <span class="inline-block px-3 py-1 rounded-full text-xs font-extrabold leading-none ${p.stock === 0 ? 'bg-terra-800 text-white' : 'bg-terra-200 text-terra-900'}">
+                ${p.stock} / mín. ${p.minStock} ${p.unit}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right whitespace-nowrap">
+              <button onclick="quickRestock(${p.id})" class="inline-flex items-center justify-center bg-forest-800 hover:bg-forest-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap shadow-xs">
+                + Recibir Stock
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      const catContainer = document.getElementById('category-breakdown');
+      if (products.length === 0) {
+        catContainer.innerHTML = `<p class="text-xs text-khaki-700 text-center py-6">Sin datos registrados aún ($0).</p>`;
+      } else {
+        const catMap = {};
+        products.forEach(p => {
+          catMap[p.category] = (catMap[p.category] || 0) + (p.price * p.stock);
+        });
+        catContainer.innerHTML = Object.entries(catMap)
+          .sort((a, b) => b[1] - a[1])
+          .map(([cat, val]) => {
+            const pct = totalSale > 0 ? Math.round((val / totalSale) * 100) : 0;
+            const barColor = cat.includes('Pesca') || cat.includes('Caza') ? 'bg-forest-700' : 'bg-terra-600';
+            return `
+              <div>
+                <div class="flex justify-between text-xs font-bold mb-1">
+                  <span class="text-forest-900">${cat}</span>
+                  <span class="text-terra-800">${formatCLP(val)} (${pct}%)</span>
+                </div>
+                <div class="w-full bg-khaki-200 h-2.5 rounded-full overflow-hidden">
+                  <div class="${barColor} h-full rounded-full" style="width: ${pct}%"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+      }
+    }
+
+    function renderInventory() {
+      const query = (document.getElementById('search-input')?.value || '').toLowerCase();
+      const catFilter = document.getElementById('filter-category')?.value || 'all';
+      const stockFilter = document.getElementById('filter-stock')?.value || 'all';
+
+      const filtered = products.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(query) ||
+          p.sku.toLowerCase().includes(query) ||
+          p.location.toLowerCase().includes(query) ||
+          (p.supplier && p.supplier.toLowerCase().includes(query));
+        const matchesCat = catFilter === 'all' || p.category === catFilter;
+        let matchesStock = true;
+        if (stockFilter === 'low') matchesStock = p.stock <= p.minStock;
+        if (stockFilter === 'out') matchesStock = p.stock === 0;
+        if (stockFilter === 'ok') matchesStock = p.stock > p.minStock;
+        return matchesQuery && matchesCat && matchesStock;
+      });
+
+      document.getElementById('inventory-count-label').textContent = `Mostrando ${filtered.length} de ${products.length} ítems`;
+
+      const tbody = document.getElementById('inventory-table-body');
+      const mobileCards = document.getElementById('inventory-mobile-cards');
+
+      if (filtered.length === 0) {
+        const emptyHTML = `
+          <div class="py-12 px-4 text-center">
+            <p class="text-sm font-bold text-forest-900">No hay productos para mostrar</p>
+            <p class="text-xs text-khaki-700 mt-1 mb-3">Usa el botón "+ Nuevo Producto" arriba a la derecha para agregar ítems.</p>
+          </div>`;
+        tbody.innerHTML = `<tr><td colspan="7">${emptyHTML}</td></tr>`;
+        mobileCards.innerHTML = `<div class="bg-terra-50 rounded-2xl border-2 border-khaki-300">${emptyHTML}</div>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(p => {
+        const marginPct = p.cost > 0 ? Math.round(((p.price - p.cost) / p.cost) * 100) : 0;
+        const isLow = p.stock <= p.minStock;
+        return `
+          <tr class="hover:bg-khaki-100/70 transition">
+            <td class="py-3 px-4 min-w-[220px]">
+              <div class="font-bold text-forest-950 leading-snug">${p.name}</div>
+              <div class="text-xs text-khaki-700 font-mono mt-0.5">${p.sku} · Proveedor: ${p.supplier || 'N/A'}</div>
+            </td>
+            <td class="py-3 px-4 whitespace-nowrap">
+              <span class="inline-block text-xs font-bold px-3 py-1 rounded-full leading-none ${getCategoryBadge(p.category)}">${p.category}</span>
+            </td>
+            <td class="py-3 px-4 text-xs whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5 font-semibold text-forest-900 bg-khaki-100 border border-khaki-300 px-2.5 py-1 rounded-lg">
+                <i class="fa-solid fa-location-dot text-terra-600"></i> ${p.location}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right text-khaki-700 text-xs font-medium whitespace-nowrap">${formatCLP(p.cost)} / ${p.unit}</td>
+            <td class="py-3 px-4 text-right whitespace-nowrap">
+              <div class="font-extrabold text-forest-950">${formatCLP(p.price)} <span class="text-xs font-normal text-khaki-700">/${p.unit}</span></div>
+              <div class="text-[11px] text-forest-700 font-bold">+${marginPct}% margen</div>
+            </td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="adjustStock(${p.id}, -1)" class="w-6 h-6 rounded bg-khaki-200 hover:bg-khaki-300 text-forest-900 font-bold text-xs">-</button>
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold leading-none ${p.stock === 0 ? 'bg-terra-800 text-white' : isLow ? 'bg-terra-200 text-terra-900' : 'bg-forest-100 text-forest-800 border border-forest-500/30'}">
+                  ${p.stock} ${p.unit}
+                </span>
+                <button onclick="adjustStock(${p.id}, 1)" class="w-6 h-6 rounded bg-khaki-200 hover:bg-khaki-300 text-forest-900 font-bold text-xs">+</button>
+              </div>
+              ${isLow ? `<div class="text-[10px] text-terra-700 font-bold mt-1">Mín: ${p.minStock} ${p.unit}</div>` : ''}
+            </td>
+            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+              <button onclick="addToCart(${p.id})" class="bg-terra-600 hover:bg-terra-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="Enviar a Caja/Cotizador">
+                <i class="fa-solid fa-cart-plus"></i>
+              </button>
+              <button onclick="openProductModal(${p.id})" class="bg-khaki-200 hover:bg-khaki-300 text-forest-900 px-2.5 py-1.5 rounded-lg text-xs transition" title="Editar">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="deleteProduct(${p.id})" class="bg-terra-100 hover:bg-terra-200 text-terra-800 px-2.5 py-1.5 rounded-lg text-xs transition" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      mobileCards.innerHTML = filtered.map(p => {
+        const marginPct = p.cost > 0 ? Math.round(((p.price - p.cost) / p.cost) * 100) : 0;
+        const isLow = p.stock <= p.minStock;
+        return `
+          <div class="bg-terra-50 p-3.5 rounded-2xl shadow-xs border-2 ${isLow ? 'border-terra-500' : 'border-khaki-300'} space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="inline-block whitespace-nowrap text-[10px] font-mono bg-khaki-200 px-2 py-0.5 rounded font-bold text-forest-900">${p.sku}</span>
+                  <span class="inline-block whitespace-nowrap text-[10px] px-2.5 py-0.5 rounded-full font-bold leading-none ${getCategoryBadge(p.category)}">${p.category}</span>
+                </div>
+                <h3 class="font-bold text-sm text-forest-950 mt-1 leading-snug">${p.name}</h3>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="text-base font-extrabold text-forest-950">${formatCLP(p.price)}</span>
+                <span class="text-[10px] text-khaki-700 block">/${p.unit} (+${marginPct}%)</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs bg-khaki-100 border border-khaki-300 px-2.5 py-1.5 rounded-xl">
+              <span class="font-medium text-forest-900">
+                <i class="fa-solid fa-location-dot text-terra-600 mr-1"></i>${p.location}
+              </span>
+              <span class="text-[11px] text-khaki-700">Costo: ${formatCLP(p.cost)}</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-khaki-200">
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="adjustStock(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-khaki-200 text-forest-900 font-bold text-xs">-</button>
+                <span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-extrabold leading-none ${p.stock === 0 ? 'bg-terra-800 text-white' : isLow ? 'bg-terra-200 text-terra-900' : 'bg-forest-100 text-forest-800'}">
+                  ${p.stock} ${p.unit}
+                </span>
+                <button onclick="adjustStock(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-khaki-200 text-forest-900 font-bold text-xs">+</button>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="addToCart(${p.id})" class="bg-terra-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold">
+                  <i class="fa-solid fa-cart-plus mr-1"></i>Caja
+                </button>
+                <button onclick="openProductModal(${p.id})" class="bg-khaki-200 text-forest-900 px-2.5 py-1.5 rounded-xl text-xs">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button onclick="deleteProduct(${p.id})" class="bg-terra-100 text-terra-800 px-2.5 py-1.5 rounded-xl text-xs">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPOSCatalog() {
+      const q = (document.getElementById('pos-search')?.value || '').toLowerCase();
+      const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+      );
+
+      const grid = document.getElementById('pos-catalog-grid');
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="sm:col-span-2 bg-terra-50 p-8 rounded-2xl border-2 border-khaki-300 text-center text-xs text-khaki-700">No hay productos registrados en el catálogo.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="bg-terra-50 p-3.5 rounded-2xl border-2 border-khaki-300 hover:border-forest-700 transition flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start gap-2">
+              <span class="text-[10px] font-mono bg-khaki-200 px-2 py-0.5 rounded text-forest-900 font-bold">${p.sku}</span>
+              <span class="text-[11px] font-bold ${p.stock > 0 ? 'text-forest-700' : 'text-terra-800'}">
+                Stock: ${p.stock} ${p.unit}
+              </span>
+            </div>
+            <h4 class="font-bold text-sm text-forest-950 mt-1">${p.name}</h4>
+            <p class="text-xs text-khaki-700 mt-0.5"><i class="fa-solid fa-location-dot text-terra-600 mr-1"></i>${p.location}</p>
+          </div>
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-khaki-200">
+            <div>
+              <span class="text-base font-extrabold text-forest-950">${formatCLP(p.price)}</span>
+              <span class="text-xs text-khaki-700">/${p.unit}</span>
+            </div>
+            <button onclick="addToCart(${p.id})" ${p.stock <= 0 ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl text-xs font-bold ${p.stock > 0 ? 'bg-forest-800 hover:bg-terra-600 text-white' : 'bg-khaki-200 text-khaki-500 cursor-not-allowed'} transition">
+              + Agregar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+      const existing = cart.find(item => item.id === productId);
+      if (existing) {
+        existing.qty = Math.round((existing.qty + 1) * 100) / 100;
+      } else {
+        cart.push({ id: prod.id, sku: prod.sku, name: prod.name, price: prod.price, unit: prod.unit, qty: 1 });
+      }
+      renderCart();
+    }
+
+    function updateCartQty(productId, newQty) {
+      const qty = parseFloat(newQty);
+      if (isNaN(qty) || qty <= 0) {
+        cart = cart.filter(i => i.id !== productId);
+      } else {
+        const item = cart.find(i => i.id === productId);
+        if (item) item.qty = qty;
+      }
+      renderCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      renderCart();
+    }
+
+    function renderCart() {
+      const badge = document.getElementById('cart-badge');
+      const mobBadge = document.getElementById('mob-cart-badge');
+      if (cart.length > 0) {
+        badge.textContent = cart.length;
+        badge.classList.remove('hidden');
+        if (mobBadge) {
+          mobBadge.textContent = cart.length;
+          mobBadge.classList.remove('hidden');
+        }
+      } else {
+        badge.classList.add('hidden');
+        if (mobBadge) mobBadge.classList.add('hidden');
+      }
+
+      const container = document.getElementById('cart-items-container');
+      if (cart.length === 0) {
+        container.innerHTML = `<div class="py-10 text-center text-khaki-700 text-xs">Ticket vacío ($0). Selecciona productos del catálogo para vender o cotizar.</div>`;
+      } else {
+        container.innerHTML = cart.map(item => `
+          <div class="pt-2 flex items-center justify-between gap-2 text-xs">
+            <div class="flex-1">
+              <div class="font-bold text-forest-950">${item.name}</div>
+              <div class="text-khaki-700">${formatCLP(item.price)} por ${item.unit}</div>
+            </div>
+            <div class="flex items-center gap-1">
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                value="${item.qty}"
+                onchange="updateCartQty(${item.id}, this.value)"
+                class="w-16 px-2 py-1 border border-khaki-300 bg-white rounded text-center font-bold"
+              />
+              <span class="text-khaki-700 w-7">${item.unit}</span>
+            </div>
+            <div class="font-extrabold text-forest-950 w-20 text-right">
+              ${formatCLP(item.price * item.qty)}
+            </div>
+            <button onclick="updateCartQty(${item.id}, 0)" class="text-khaki-700 hover:text-terra-800 px-1 font-bold">
+              &times;
+            </button>
+          </div>
+        `).join('');
+      }
+
+      const rawSubtotal = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+      const discountPct = parseFloat(document.getElementById('pos-discount')?.value) || 0;
+      const finalTotal = Math.round(rawSubtotal * (1 - discountPct / 100));
+      const net = Math.round(finalTotal / 1.19);
+      const tax = finalTotal - net;
+
+      document.getElementById('cart-net').textContent = formatCLP(net);
+      document.getElementById('cart-tax').textContent = formatCLP(tax);
+      document.getElementById('cart-total').textContent = formatCLP(finalTotal);
+
+      const cashReceived = parseFloat(document.getElementById('cash-received')?.value) || 0;
+      const changeRow = document.getElementById('cash-change-row');
+      if (cashReceived > 0 && finalTotal > 0 && cashReceived >= finalTotal) {
+        changeRow.classList.remove('hidden');
+        document.getElementById('cart-change').textContent = formatCLP(cashReceived - finalTotal);
+      } else {
+        changeRow.classList.add('hidden');
+      }
+    }
+
+    function completeSale() {
+      if (cart.length === 0) return alert('Agrega al menos un producto al ticket.');
+
+      cart.forEach(item => {
+        const prod = products.find(p => p.id === item.id);
+        if (prod) {
+          prod.stock = Math.max(0, Math.round((prod.stock - item.qty) * 100) / 100);
+        }
+      });
+
+      const client = document.getElementById('client-name').value || 'Cliente Mostrador';
+      const payMethod = document.getElementById('payment-method').value || 'Efectivo';
+      const totalStr = document.getElementById('cart-total').textContent;
+      const summary = cart.map(i => `${i.qty} ${i.unit} ${i.name}`).join(' + ');
+
+      movements.unshift({
+        date: new Date().toLocaleDateString('es-CL') + ' ' + new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+        type: 'VENTA',
+        detail: summary,
+        client: `${client} (${payMethod})`,
+        amount: totalStr
+      });
+
+      cart = [];
+      document.getElementById('client-name').value = '';
+      document.getElementById('client-doc').value = '';
+      document.getElementById('cash-received').value = '';
+      saveData();
+      alert(`✅ Venta registrada con éxito por ${totalStr}.`);
+    }
+
+    function printQuote() {
+      if (cart.length === 0) return alert('Agrega productos al ticket para generar la cotización.');
+      const client = document.getElementById('client-name').value || 'Cliente General';
+      const doc = document.getElementById('client-doc').value || '';
+      document.getElementById('print-date').textContent = 'Fecha: ' + new Date().toLocaleDateString('es-CL');
+      document.getElementById('print-client').textContent = `Cliente: ${client} ${doc ? '(' + doc + ')' : ''}`;
+      document.getElementById('print-total').textContent = document.getElementById('cart-total').textContent;
+
+      document.getElementById('print-items-body').innerHTML = cart.map(i => `
+        <tr>
+          <td class="py-1.5 font-mono">${i.sku}</td>
+          <td class="py-1.5 font-semibold">${i.name}</td>
+          <td class="py-1.5 text-center">${i.qty} ${i.unit}</td>
+          <td class="py-1.5 text-right">${formatCLP(i.price)}</td>
+          <td class="py-1.5 text-right font-bold">${formatCLP(i.price * i.qty)}</td>
+        </tr>
+      `).join('');
+
+      movements.unshift({
+        date: new Date().toLocaleDateString('es-CL') + ' ' + new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+        type: 'COTIZACIÓN',
+        detail: `Cotización formal (${cart.length} ítems)`,
+        client: client,
+        amount: document.getElementById('cart-total').textContent
+      });
+      saveData();
+      window.print();
+    }
+
+    function adjustStock(id, delta) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      p.stock = Math.max(0, Math.round((p.stock + delta) * 100) / 100);
+      saveData();
+    }
+
+    function quickRestock(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      const qtyStr = prompt(`¿Cuántas unidades (${p.unit}) de "${p.name}" ingresaron a bodega?`, '10');
+      const qty = parseFloat(qtyStr);
+      if (!isNaN(qty) && qty > 0) {
+        p.stock = Math.round((p.stock + qty) * 100) / 100;
+        movements.unshift({
+          date: new Date().toLocaleDateString('es-CL') + ' ' + new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+          type: 'INGRESO',
+          detail: `Reposición: +${qty} ${p.unit} de ${p.name}`,
+          client: p.supplier || 'Bodega',
+          amount: `+${qty} ${p.unit}`
+        });
+        saveData();
+      }
+    }
+
+    function openProductModal(id = null) {
+      const modal = document.getElementById('product-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      if (id) {
+        const p = products.find(x => x.id === id);
+        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen text-terra-400"></i> Editar Producto`;
+        document.getElementById('prod-id').value = p.id;
+        document.getElementById('prod-sku').value = p.sku;
+        document.getElementById('prod-name').value = p.name;
+        document.getElementById('prod-category').value = p.category;
+        document.getElementById('prod-unit').value = p.unit;
+        document.getElementById('prod-location').value = p.location;
+        document.getElementById('prod-cost').value = p.cost;
+        document.getElementById('prod-price').value = p.price;
+        document.getElementById('prod-stock').value = p.stock;
+        document.getElementById('prod-min').value = p.minStock;
+        document.getElementById('prod-supplier').value = p.supplier || '';
+      } else {
+        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-box-open text-terra-400"></i> Nuevo Producto (Ferretería / Pesca / Caza)`;
+        document.getElementById('product-form').reset();
+        document.getElementById('prod-id').value = '';
+      }
+      updateMarginPreview();
+    }
+
+    function closeProductModal() {
+      const modal = document.getElementById('product-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function updateMarginPreview() {
+      const cost = parseFloat(document.getElementById('prod-cost').value) || 0;
+      const price = parseFloat(document.getElementById('prod-price').value) || 0;
+      const diff = price - cost;
+      const pct = cost > 0 ? Math.round((diff / cost) * 100) : 0;
+      document.getElementById('margin-preview').textContent = `${pct}% (${formatCLP(diff)})`;
+    }
+
+    function saveProduct(e) {
+      e.preventDefault();
+      const idVal = document.getElementById('prod-id').value;
+      const itemData = {
+        id: idVal ? parseInt(idVal) : Date.now(),
+        sku: document.getElementById('prod-sku').value.trim(),
+        name: document.getElementById('prod-name').value.trim(),
+        category: document.getElementById('prod-category').value,
+        unit: document.getElementById('prod-unit').value,
+        location: document.getElementById('prod-location').value.trim(),
+        cost: parseFloat(document.getElementById('prod-cost').value) || 0,
+        price: parseFloat(document.getElementById('prod-price').value) || 0,
+        stock: parseFloat(document.getElementById('prod-stock').value) || 0,
+        minStock: parseFloat(document.getElementById('prod-min').value) || 0,
+        supplier: document.getElementById('prod-supplier').value.trim()
+      };
+
+      if (idVal) {
+        const idx = products.findIndex(p => p.id === parseInt(idVal));
+        if (idx > -1) products[idx] = itemData;
+      } else {
+        products.unshift(itemData);
+        movements.unshift({
+          date: new Date().toLocaleDateString('es-CL') + ' ' + new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+          type: 'INGRESO',
+          detail: `Creación producto: ${itemData.name} (Stock inicial: ${itemData.stock} ${itemData.unit})`,
+          client: itemData.supplier || 'Inventario Inicial',
+          amount: `${itemData.stock} ${itemData.unit}`
+        });
+      }
+      closeProductModal();
+      saveData();
+    }
+
+    function deleteProduct(id) {
+      if (confirm('¿Eliminar este producto del inventario?')) {
+        products = products.filter(p => p.id !== id);
+        saveData();
+      }
+    }
+
+    function renderMovements() {
+      const tbody = document.getElementById('movements-table-body');
+      if (movements.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-khaki-700 text-xs">Sin movimientos registrados aún.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = movements.map(m => `
+        <tr class="hover:bg-khaki-100/70">
+          <td class="py-3 px-4 text-xs text-khaki-700 whitespace-nowrap">${m.date}</td>
+          <td class="py-3 px-4 whitespace-nowrap">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold leading-none ${
+              m.type === 'VENTA' ? 'bg-forest-100 text-forest-800 border border-forest-500/30' :
+              m.type === 'INGRESO' ? 'bg-khaki-200 text-forest-900' : 'bg-terra-200 text-terra-900'
+            }">${m.type}</span>
+          </td>
+          <td class="py-3 px-4 font-medium text-forest-950">${m.detail}</td>
+          <td class="py-3 px-4 text-xs text-khaki-700 whitespace-nowrap">${m.client}</td>
+          <td class="py-3 px-4 text-right font-bold text-forest-950 whitespace-nowrap">${m.amount}</td>
+        </tr>
+      `).join('');
+    }
+
+    function exportCSV() {
+      const headers = [
+        'Codigo SKU',
+        'Producto',
+        'Rubro / Categoria',
+        'Ubicacion Fisica',
+        'Unidad',
+        'Costo Unitario ($)',
+        'Precio Venta ($)',
+        'Margen (%)',
+        'Stock Actual',
+        'Stock Minimo',
+        'Estado Stock',
+        'Valor Total Costo ($)',
+        'Valor Total Venta ($)',
+        'Proveedor'
+      ];
+
+      const rows = products.map(p => {
+        const margin = p.cost > 0 ? Math.round(((p.price - p.cost) / p.cost) * 100) : 0;
+        const status = p.stock === 0 ? 'AGOTADO' : (p.stock <= p.minStock ? 'CRITICO' : 'OPTIMO');
+        return [
+          `"${(p.sku || '').replace(/"/g, '""')}"`,
+          `"${(p.name || '').replace(/"/g, '""')}"`,
+          `"${(p.category || '').replace(/"/g, '""')}"`,
+          `"${(p.location || '').replace(/"/g, '""')}"`,
+          `"${p.unit}"`,
+          p.cost,
+          p.price,
+          `${margin}%`,
+          String(p.stock).replace('.', ','),
+          String(p.minStock).replace('.', ','),
+          status,
+          Math.round(p.cost * p.stock),
+          Math.round(p.price * p.stock),
+          `"${(p.supplier || '').replace(/"/g, '""')}"`
+        ].join(';');
+      });
+
+      const bom = '\uFEFF';
+      const csvContent = bom + [headers.join(';'), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Inventario_FerreControl_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportMovementsCSV() {
+      const headers = ['Fecha y Hora', 'Tipo Movimiento', 'Detalle', 'Cliente / Medio Pago', 'Monto / Cantidad'];
+      const rows = movements.map(m => [
+        `"${m.date}"`,
+        `"${m.type}"`,
+        `"${(m.detail || '').replace(/"/g, '""')}"`,
+        `"${(m.client || '').replace(/"/g, '""')}"`,
+        `"${m.amount}"`
+      ].join(';'));
+
+      const bom = '\uFEFF';
+      const csvContent = bom + [headers.join(';'), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Kardex_Movimientos_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportBackupJSON() {
+      const data = { products, movements, exportedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Respaldo_FerreControl_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (Array.isArray(parsed.products)) {
+            products = parsed.products;
+            movements = Array.isArray(parsed.movements) ? parsed.movements : [];
+            saveData();
+            alert('✅ Respaldo cargado correctamente.');
+          } else {
+            alert('Archivo de respaldo no válido.');
+          }
+        } catch (err) {
+          alert('Error al leer el archivo de respaldo.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderInventory();
+      renderPOSCatalog();
+      renderCart();
+      renderMovements();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      renderAll();
+    });
+  </script>
+</body>
+
+</html>

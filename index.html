@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FerreControl Pro v1.0 — Sistema de Inventario y Cotización para Ferretería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    @media print {
+      body * { visibility: hidden; }
+      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Barra Superior de Propuesta Comercial -->
+  <div class="bg-amber-500 text-slate-950 px-4 py-1.5 text-xs font-semibold flex flex-wrap items-center justify-between gap-2 no-print">
+    <div class="flex items-center gap-2">
+      <span class="bg-slate-950 text-amber-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Versión 1.0 — Demo Comercial</span>
+      <span>Especializado para Ferretería: Venta a granel (metros/kilos), ubicación por pasillo/gaveta y cotizador para maestros.</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="resetDemoData()" class="underline hover:text-slate-800 font-bold">
+        <i class="fa-solid fa-rotate-right mr-1"></i>Restaurar Datos de Prueba
+      </button>
+    </div>
+  </div>
+
+  <!-- Header Principal -->
+  <header class="bg-slate-900 text-white shadow-lg no-print">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-black shadow">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2">
+            FerreControl <span class="text-amber-400">PRO</span>
+            <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-medium border border-slate-700">v1.0</span>
+          </h1>
+          <p class="text-xs text-slate-400">Gestión de Inventario, Ubicación Física y Punto de Venta Ferretero</p>
+        </div>
+      </div>
+
+      <!-- Navegación por Pestañas -->
+      <nav class="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-amber-500 text-slate-950">
+          <i class="fa-solid fa-chart-pie"></i> Resumen
+        </button>
+        <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-300 hover:text-white">
+          <i class="fa-solid fa-boxes-stacked"></i> Inventario
+        </button>
+        <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-300 hover:text-white">
+          <i class="fa-solid fa-cash-register"></i> Caja / Cotizador
+          <span id="cart-badge" class="bg-amber-500 text-slate-950 text-xs font-extrabold px-1.5 py-0.2 rounded-full hidden">0</span>
+        </button>
+        <button onclick="switchTab('movements')" id="tab-movements" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-300 hover:text-white">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial
+        </button>
+      </nav>
+
+      <!-- Acciones Rápidas -->
+      <div class="flex items-center gap-2">
+        <button onclick="openProductModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-sm shadow flex items-center gap-2 transition">
+          <i class="fa-solid fa-plus"></i> Nuevo Producto
+        </button>
+        <button onclick="exportCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-3 py-2.5 rounded-xl text-sm transition" title="Exportar a Excel (CSV)">
+          <i class="fa-solid fa-file-excel text-emerald-400 mr-1"></i> Excel
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="max-w-7xl w-full mx-auto px-4 py-6 flex-1 no-print">
+
+    <!-- ==================== SECCIÓN 1: DASHBOARD ==================== -->
+    <section id="view-dashboard" class="space-y-6">
+      <!-- KPIs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Productos (SKUs)</p>
+            <p id="kpi-total-skus" class="text-3xl font-extrabold text-slate-900 mt-1">0</p>
+            <p class="text-xs text-slate-500 mt-1">En 7 categorías ferreteras</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-cubes"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Valor Costo Inventario</p>
+            <p id="kpi-inventory-cost" class="text-3xl font-extrabold text-slate-900 mt-1">$0</p>
+            <p class="text-xs text-slate-500 mt-1">Capital invertido en bodega</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-sack-dollar"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Valor Venta Estimado</p>
+            <p id="kpi-inventory-sale" class="text-3xl font-extrabold text-amber-600 mt-1">$0</p>
+            <p id="kpi-expected-profit" class="text-xs text-emerald-600 font-semibold mt-1">Margen proyectado: $0</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-200 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-rose-500">Alertas Stock Crítico</p>
+            <p id="kpi-low-stock" class="text-3xl font-extrabold text-rose-600 mt-1">0</p>
+            <p class="text-xs text-slate-500 mt-1">Productos para reponer hoy</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila Inferior Dashboard: Stock Crítico + Distribución por Categorías -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Lista de Reposición Urgente -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 class="font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-bell text-rose-500"></i> Productos con Stock Bajo o Agotado
+              </h2>
+              <p class="text-xs text-slate-500">Evita perder ventas por falta de mercadería clave</p>
+            </div>
+            <button onclick="switchTab('inventory'); document.getElementById('filter-stock').value='low'; renderInventory();" class="text-xs font-semibold text-amber-600 hover:underline">
+              Ver todos en inventario →
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                <tr>
+                  <th class="py-3 px-4">Producto</th>
+                  <th class="py-3 px-4">Ubicación</th>
+                  <th class="py-3 px-4">Proveedor</th>
+                  <th class="py-3 px-4 text-center">Actual / Mín.</th>
+                  <th class="py-3 px-4 text-right">Acción Rápida</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-low-stock-body" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Resumen por Categoría Ferretera -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <h2 class="font-bold text-slate-900 flex items-center gap-2 mb-1">
+            <i class="fa-solid fa-layer-group text-amber-500"></i> Valor por Rubro
+          </h2>
+          <p class="text-xs text-slate-500 mb-4">Distribución del capital en la ferretería</p>
+          <div id="category-breakdown" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECCIÓN 2: INVENTARIO COMPLETO ==================== -->
+    <section id="view-inventory" class="space-y-4 hidden">
+      <!-- Barra de Filtros y Búsqueda Inteligente -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <div class="md:col-span-5 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+          <input
+            type="text"
+            id="search-input"
+            oninput="renderInventory()"
+            placeholder="Buscar por nombre, SKU, medida (ej. 1/2), pasillo o uso..."
+            class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+
+        <div class="md:col-span-3">
+          <select id="filter-category" onchange="renderInventory()" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <option value="all">Todas las Categorías</option>
+            <option value="Herramientas">Herramientas Manuales y Eléctricas</option>
+            <option value="Tornillería y Fijaciones">Tornillería y Fijaciones (Granel)</option>
+            <option value="Gasfitería y Agua">Gasfitería y Agua</option>
+            <option value="Electricidad e Iluminación">Electricidad e Iluminación</option>
+            <option value="Pinturas y Químicos">Pinturas, Adhesivos y Químicos</option>
+            <option value="Construcción">Construcción y Obra Gruesa</option>
+            <option value="Seguridad (EPP)">Seguridad Industrial (EPP)</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <select id="filter-stock" onchange="renderInventory()" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <option value="all">Cualquier Stock</option>
+            <option value="low">⚠️ Stock Crítico / Bajo</option>
+            <option value="out">🚨 Agotados (0)</option>
+            <option value="ok">✅ Stock Óptimo</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2 text-right">
+          <span id="inventory-count-label" class="text-xs font-semibold text-slate-500">Mostrando 0 ítems</span>
+        </div>
+      </div>
+
+      <!-- Tabla de Inventario -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-900 text-slate-200 text-xs uppercase">
+              <tr>
+                <th class="py-3.5 px-4">SKU / Producto</th>
+                <th class="py-3.5 px-4">Categoría</th>
+                <th class="py-3.5 px-4">Ubicación Física</th>
+                <th class="py-3.5 px-4 text-right">Costo</th>
+                <th class="py-3.5 px-4 text-right">Precio Venta</th>
+                <th class="py-3.5 px-4 text-center">Stock Disponible</th>
+                <th class="py-3.5 px-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECCIÓN 3: PUNTO DE VENTA Y COTIZADOR ==================== -->
+    <section id="view-pos" class="hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Catálogo Rápido Izquierdo -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+            <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Buscador Rápido de Mostrador / Lector Código</label>
+            <div class="relative">
+              <i class="fa-solid fa-barcode absolute left-3.5 top-3 text-slate-400"></i>
+              <input
+                type="text"
+                id="pos-search"
+                oninput="renderPOSCatalog()"
+                placeholder="Escribe nombre, medida o código (ej. 'cable', 'clavo', 'teflon', '1/2')..."
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+          </div>
+
+          <div id="pos-catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Carrito / Cotizador Derecho -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-fit">
+          <div class="p-4 border-b border-slate-100 bg-slate-900 text-white rounded-t-2xl flex items-center justify-between">
+            <div>
+              <h2 class="font-bold text-base flex items-center gap-2">
+                <i class="fa-solid fa-cart-shopping text-amber-400"></i> Ticket de Venta / Cotización
+              </h2>
+              <p class="text-xs text-slate-400">Soporta decimales para venta por metro o kilo (ej. 1.5)</p>
+            </div>
+            <button onclick="clearCart()" class="text-xs text-slate-300 hover:text-rose-400">
+              <i class="fa-solid fa-trash-can mr-1"></i>Vaciar
+            </button>
+          </div>
+
+          <!-- Datos Opcionales del Cliente / Maestro -->
+          <div class="p-4 bg-slate-50 border-b border-slate-200 grid grid-cols-2 gap-2">
+            <input type="text" id="client-name" placeholder="Cliente / Maestro / Empresa (Opcional)" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs bg-white" />
+            <input type="text" id="client-doc" placeholder="RUT / DNI / Teléfono" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs bg-white" />
+          </div>
+
+          <!-- Items del Carrito -->
+          <div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto divide-y divide-slate-100"></div>
+
+          <!-- Totales y Descuento -->
+          <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-2">
+            <div class="flex justify-between items-center text-xs text-slate-600">
+              <span>Descuento Maestro / Frecuente (%)</span>
+              <input type="number" id="pos-discount" value="0" min="0" max="50" oninput="renderCart()" class="w-16 text-right px-2 py-1 rounded border border-slate-300 bg-white font-bold" />
+            </div>
+            <div class="flex justify-between text-xs text-slate-500">
+              <span>Subtotal Neto:</span>
+              <span id="cart-net">$0</span>
+            </div>
+            <div class="flex justify-between text-xs text-slate-500">
+              <span>IVA (19% incluido):</span>
+              <span id="cart-tax">$0</span>
+            </div>
+            <div class="flex justify-between text-lg font-extrabold text-slate-900 pt-1 border-t border-slate-200">
+              <span>TOTAL A PAGAR:</span>
+              <span id="cart-total" class="text-amber-600">$0</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-3">
+              <button onclick="printQuote()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-file-invoice"></i> Imprimir Cotización
+              </button>
+              <button onclick="completeSale()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow transition">
+                <i class="fa-solid fa-check-circle"></i> Confirmar Venta
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECCIÓN 4: HISTORIAL DE MOVIMIENTOS ==================== -->
+    <section id="view-movements" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 class="font-bold text-slate-900">Kardex / Historial de Movimientos de Inventario</h2>
+            <p class="text-xs text-slate-500">Registro de ventas, ingresos de bodega y ajustes</p>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-900 text-slate-200 text-xs uppercase">
+              <tr>
+                <th class="py-3 px-4">Fecha / Hora</th>
+                <th class="py-3 px-4">Tipo</th>
+                <th class="py-3 px-4">Detalle / Producto</th>
+                <th class="py-3 px-4">Cliente / Responsable</th>
+                <th class="py-3 px-4 text-right">Monto / Cantidad</th>
+              </tr>
+            </thead>
+            <tbody id="movements-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL CREAR / EDITAR PRODUCTO ==================== -->
+  <div id="product-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200">
+      <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <h3 id="modal-title" class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-box-open text-amber-400"></i> Nuevo Producto Ferretero
+        </h3>
+        <button onclick="closeProductModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <form id="product-form" onsubmit="saveProduct(event)" class="p-6 space-y-4">
+        <input type="hidden" id="prod-id" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Código SKU / Barras *</label>
+            <input type="text" id="prod-sku" required placeholder="Ej. TOR-38-KG" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre y Medida del Producto *</label>
+            <input type="text" id="prod-name" required placeholder="Ej. Llave Esférica Agua 1/2 Pulgada Bronce" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Categoría *</label>
+            <select id="prod-category" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+              <option value="Herramientas">Herramientas</option>
+              <option value="Tornillería y Fijaciones">Tornillería y Fijaciones</option>
+              <option value="Gasfitería y Agua">Gasfitería y Agua</option>
+              <option value="Electricidad e Iluminación">Electricidad e Iluminación</option>
+              <option value="Pinturas y Químicos">Pinturas y Químicos</option>
+              <option value="Construcción">Construcción</option>
+              <option value="Seguridad (EPP)">Seguridad (EPP)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Unidad de Venta *</label>
+            <select id="prod-unit" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+              <option value="un">Unidad (un)</option>
+              <option value="mt">Metro lineal (mt)</option>
+              <option value="kg">Kilogramo a granel (kg)</option>
+              <option value="lt">Litro (lt)</option>
+              <option value="caja">Caja / Pack</option>
+              <option value="saco">Saco / Bolsa</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ubicación (Pasillo/Gaveta) *</label>
+            <input type="text" id="prod-location" required placeholder="Ej. Pasillo 2 - Gaveta B4" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Costo Compra ($) *</label>
+            <input type="number" id="prod-cost" required min="0" step="1" oninput="updateMarginPreview()" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Precio Venta Público ($) *</label>
+            <input type="number" id="prod-price" required min="0" step="1" oninput="updateMarginPreview()" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white font-bold text-slate-900" />
+          </div>
+          <div class="flex flex-col justify-center">
+            <span class="text-xs text-slate-500">Margen de Ganancia:</span>
+            <span id="margin-preview" class="text-base font-extrabold text-emerald-600">0% ($0)</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Actual *</label>
+            <input type="number" id="prod-stock" required min="0" step="0.1" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Mínimo (Alerta) *</label>
+            <input type="number" id="prod-min" required min="0" step="0.1" placeholder="5" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Proveedor Principal</label>
+            <input type="text" id="prod-supplier" placeholder="Ej. Chilemat / Imperial / Sodimac" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" onclick="closeProductModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-100">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold shadow">
+            Guardar Producto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== ÁREA IMPRIMIBLE PARA COTIZACIONES ==================== -->
+  <div id="printableArea" class="hidden print:block p-8 bg-white text-slate-900">
+    <div class="flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-black uppercase">FERRETERÍA — COTIZACIÓN FORMAL</h1>
+        <p class="text-xs text-slate-600">Generado por FerreControl Pro v1.0</p>
+      </div>
+      <div class="text-right text-xs">
+        <p id="print-date" class="font-bold"></p>
+        <p id="print-client" class="mt-1"></p>
+      </div>
+    </div>
+    <table class="w-full text-left text-xs border-collapse mb-6">
+      <thead>
+        <tr class="border-b border-slate-400 uppercase">
+          <th class="py-2">Código</th>
+          <th class="py-2">Descripción Producto</th>
+          <th class="py-2 text-center">Cant.</th>
+          <th class="py-2 text-right">Precio Unit.</th>
+          <th class="py-2 text-right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody id="print-items-body" class="divide-y divide-slate-200"></tbody>
+    </table>
+    <div class="flex justify-end">
+      <div class="w-64 space-y-1 text-sm">
+        <div class="flex justify-between font-extrabold text-base border-t-2 border-slate-900 pt-2">
+          <span>TOTAL COTIZADO:</span>
+          <span id="print-total">$0</span>
+        </div>
+        <p class="text-[11px] text-slate-500 pt-2">* Valores incluyen IVA. Cotización válida por 5 días hábiles o hasta agotar stock.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LÓGICA DE LA APLICACIÓN ==================== -->
+  <script>
+    const STORAGE_KEY_PRODUCTS = 'ferrecontrol_v1_products';
+    const STORAGE_KEY_MOVEMENTS = 'ferrecontrol_v1_movements';
+
+    const INITIAL_PRODUCTS = [
+      { id: 1, sku: 'HER-001', name: 'Taladro Percutor Inalámbrico 20V + 2 Baterías', category: 'Herramientas', unit: 'un', location: 'Vitrina A - Nivel 1', cost: 42000, price: 64990, stock: 6, minStock: 3, supplier: 'Makita / DeWalt Dist.' },
+      { id: 2, sku: 'HER-002', name: 'Martillo Carpintero Uña Curva Mango Fibra 16 oz', category: 'Herramientas', unit: 'un', location: 'Pasillo 1 - Gancho C2', cost: 4500, price: 7990, stock: 18, minStock: 6, supplier: 'Stanley Tools' },
+      { id: 3, sku: 'TOR-101', name: 'Clavo Corriente 3 Pulgadas (Venta a Granel)', category: 'Tornillería y Fijaciones', unit: 'kg', location: 'Pasillo 2 - Cajón Granel 4', cost: 1650, price: 2990, stock: 4.5, minStock: 15, supplier: 'Inchalam' },
+      { id: 4, sku: 'TOR-102', name: 'Tornillo Volcanita / Drywall 6 x 1-1/4" Negro (Caja 500u)', category: 'Tornillería y Fijaciones', unit: 'caja', location: 'Pasillo 2 - Estante B3', cost: 3800, price: 6990, stock: 12, minStock: 5, supplier: 'Mamut Fijaciones' },
+      { id: 5, sku: 'GAS-201', name: 'Llave de Paso Agua Esférica Bronce 1/2" HI-HI', category: 'Gasfitería y Agua', unit: 'un', location: 'Pasillo 3 - Gaveta G12', cost: 3200, price: 5990, stock: 2, minStock: 8, supplier: 'Fas / Nibsa' },
+      { id: 6, sku: 'GAS-202', name: 'Cinta Teflón Alta Densidad Gasfitería 3/4" x 12m', category: 'Gasfitería y Agua', unit: 'un', location: 'Mostrador Caja - Gancho 1', cost: 350, price: 990, stock: 45, minStock: 20, supplier: 'Vinilit' },
+      { id: 7, sku: 'ELE-301', name: 'Cable Eléctrico EVA Libre Halógeno 2.5 mm² Rojo', category: 'Electricidad e Iluminación', unit: 'mt', location: 'Pasillo 4 - Carrete R2', cost: 520, price: 950, stock: 18.5, minStock: 50, supplier: 'Covisa' },
+      { id: 8, sku: 'ELE-302', name: 'Enchufe Doble Embutido 10A/16A Blanco Certificado', category: 'Electricidad e Iluminación', unit: 'un', location: 'Pasillo 4 - Estante E1', cost: 1900, price: 3690, stock: 24, minStock: 10, supplier: 'BTicino' },
+      { id: 9, sku: 'PIN-401', name: 'Esmalte al Agua Blanco Semibrillo Galón (3.78 Lt)', category: 'Pinturas y Químicos', unit: 'un', location: 'Pasillo 5 - Nivel Piso', cost: 16500, price: 25990, stock: 9, minStock: 4, supplier: 'Ceresita / Sipa' },
+      { id: 10, sku: 'PIN-402', name: 'Silicona Neutra Transparente Antihongos 280ml', category: 'Pinturas y Químicos', unit: 'un', location: 'Pasillo 5 - Estante C1', cost: 2400, price: 4490, stock: 3, minStock: 10, supplier: 'Soudal / Sika' },
+      { id: 11, sku: 'CON-501', name: 'Cemento Polpaico / Biobío Alta Resistencia 25 Kg', category: 'Construcción', unit: 'saco', location: 'Bodega Patio - Pallet 1', cost: 3950, price: 5490, stock: 65, minStock: 30, supplier: 'Polpaico' },
+      { id: 12, sku: 'SEG-601', name: 'Guante Cabritilla Corto Reforzado Maestro', category: 'Seguridad (EPP)', unit: 'un', location: 'Pasillo 1 - Cesto EPP', cost: 1400, price: 2990, stock: 0, minStock: 12, supplier: 'Steelpro' }
+    ];
+
+    const INITIAL_MOVEMENTS = [
+      { date: 'Hoy, 10:15', type: 'VENTA', detail: '10 mt Cable EVA 2.5mm² + 2 Enchufes BTicino', client: 'Maestro Juan Pérez', amount: '$16.880' },
+      { date: 'Hoy, 09:30', type: 'INGRESO', detail: '+40 sacos Cemento 25 Kg (Factura #45092)', client: 'Bodega Central', amount: '+40 sacos' },
+      { date: 'Ayer, 17:45', type: 'COTIZACIÓN', detail: 'Materiales Gasfitería y Pintura Casa', client: 'Constructora Andes SpA', amount: '$184.500' }
+    ];
+
+    let products = [];
+    let movements = [];
+    let cart = [];
+
+    function formatCLP(num) {
+      return '$' + Math.round(num).toLocaleString('es-CL');
+    }
+
+    function loadData() {
+      const savedProds = localStorage.getItem(STORAGE_KEY_PRODUCTS);
+      const savedMovs = localStorage.getItem(STORAGE_KEY_MOVEMENTS);
+      products = savedProds ? JSON.parse(savedProds) : [...INITIAL_PRODUCTS];
+      movements = savedMovs ? JSON.parse(savedMovs) : [...INITIAL_MOVEMENTS];
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
+      localStorage.setItem(STORAGE_KEY_MOVEMENTS, JSON.stringify(movements));
+      renderAll();
+    }
+
+    function resetDemoData() {
+      if (confirm('¿Restaurar el inventario de demostración original de la ferretería?')) {
+        localStorage.removeItem(STORAGE_KEY_PRODUCTS);
+        localStorage.removeItem(STORAGE_KEY_MOVEMENTS);
+        cart = [];
+        loadData();
+        renderAll();
+      }
+    }
+
+    function switchTab(tabName) {
+      ['dashboard', 'inventory', 'pos', 'movements'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('hidden');
+        const btn = document.getElementById('tab-' + t);
+        btn.className = 'tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-300 hover:text-white';
+      });
+      document.getElementById('view-' + tabName).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + tabName);
+      activeBtn.className = 'tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-amber-500 text-slate-950';
+      renderAll();
+    }
+
+    function renderDashboard() {
+      const totalSkus = products.length;
+      const totalCost = products.reduce((sum, p) => sum + (p.cost * p.stock), 0);
+      const totalSale = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+      const lowStockItems = products.filter(p => p.stock <= p.minStock);
+
+      document.getElementById('kpi-total-skus').textContent = totalSkus;
+      document.getElementById('kpi-inventory-cost').textContent = formatCLP(totalCost);
+      document.getElementById('kpi-inventory-sale').textContent = formatCLP(totalSale);
+      document.getElementById('kpi-expected-profit').textContent = `Ganancia proyectada: ${formatCLP(totalSale - totalCost)}`;
+      document.getElementById('kpi-low-stock').textContent = lowStockItems.length;
+
+      // Tabla de Stock Bajo
+      const lowStockBody = document.getElementById('dashboard-low-stock-body');
+      if (lowStockItems.length === 0) {
+        lowStockBody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">¡Excelente! Todo el inventario está sobre el mínimo requerido.</td></tr>`;
+      } else {
+        lowStockBody.innerHTML = lowStockItems.map(p => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-4">
+              <div class="font-bold text-slate-900">${p.name}</div>
+              <div class="text-xs text-slate-400 font-mono">${p.sku}</div>
+            </td>
+            <td class="py-3 px-4 text-xs text-slate-600">
+              <span class="bg-slate-100 px-2 py-1 rounded border border-slate-200"><i class="fa-solid fa-location-dot text-amber-500 mr-1"></i>${p.location}</span>
+            </td>
+            <td class="py-3 px-4 text-xs text-slate-600">${p.supplier || '-'}</td>
+            <td class="py-3 px-4 text-center">
+              <span class="px-2.5 py-1 rounded-full text-xs font-extrabold ${p.stock === 0 ? 'bg-rose-600 text-white' : 'bg-rose-100 text-rose-700'}">
+                ${p.stock} / mín. ${p.minStock} ${p.unit}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="quickRestock(${p.id})" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-lg text-xs font-bold transition">
+                + Recibir Stock
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Desglose por categoría
+      const catMap = {};
+      products.forEach(p => {
+        catMap[p.category] = (catMap[p.category] || 0) + (p.price * p.stock);
+      });
+      const catContainer = document.getElementById('category-breakdown');
+      catContainer.innerHTML = Object.entries(catMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, val]) => {
+          const pct = totalSale > 0 ? Math.round((val / totalSale) * 100) : 0;
+          return `
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span class="text-slate-700">${cat}</span>
+                <span class="text-slate-900 font-bold">${formatCLP(val)} (${pct}%)</span>
+              </div>
+              <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+    }
+
+    function renderInventory() {
+      const query = (document.getElementById('search-input')?.value || '').toLowerCase();
+      const catFilter = document.getElementById('filter-category')?.value || 'all';
+      const stockFilter = document.getElementById('filter-stock')?.value || 'all';
+
+      const filtered = products.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(query) ||
+                             p.sku.toLowerCase().includes(query) ||
+                             p.location.toLowerCase().includes(query) ||
+                             (p.supplier && p.supplier.toLowerCase().includes(query));
+        const matchesCat = catFilter === 'all' || p.category === catFilter;
+        let matchesStock = true;
+        if (stockFilter === 'low') matchesStock = p.stock <= p.minStock;
+        if (stockFilter === 'out') matchesStock = p.stock === 0;
+        if (stockFilter === 'ok') matchesStock = p.stock > p.minStock;
+        return matchesQuery && matchesCat && matchesStock;
+      });
+
+      document.getElementById('inventory-count-label').textContent = `Mostrando ${filtered.length} de ${products.length} ítems`;
+
+      const tbody = document.getElementById('inventory-table-body');
+      tbody.innerHTML = filtered.map(p => {
+        const marginPct = p.cost > 0 ? Math.round(((p.price - p.cost) / p.cost) * 100) : 0;
+        const isLow = p.stock <= p.minStock;
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-4">
+              <div class="font-bold text-slate-900">${p.name}</div>
+              <div class="text-xs text-slate-400 font-mono">${p.sku} · Proveedor: ${p.supplier || 'N/A'}</div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">${p.category}</span>
+            </td>
+            <td class="py-3 px-4 text-xs">
+              <span class="inline-flex items-center gap-1 font-medium text-slate-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+                <i class="fa-solid fa-location-dot text-amber-600"></i> ${p.location}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right text-slate-500 text-xs font-medium">${formatCLP(p.cost)} / ${p.unit}</td>
+            <td class="py-3 px-4 text-right">
+              <div class="font-extrabold text-slate-900">${formatCLP(p.price)} <span class="text-xs font-normal text-slate-500">/${p.unit}</span></div>
+              <div class="text-[11px] text-emerald-600 font-semibold">+${marginPct}% margen</div>
+            </td>
+            <td class="py-3 px-4 text-center">
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="adjustStock(${p.id}, -1)" class="w-6 h-6 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs">-</button>
+                <span class="px-2.5 py-1 rounded-full text-xs font-extrabold ${p.stock === 0 ? 'bg-rose-600 text-white' : isLow ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
+                  ${p.stock} ${p.unit}
+                </span>
+                <button onclick="adjustStock(${p.id}, 1)" class="w-6 h-6 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs">+</button>
+              </div>
+              ${isLow ? `<div class="text-[10px] text-rose-600 font-bold mt-0.5">Mín: ${p.minStock} ${p.unit}</div>` : ''}
+            </td>
+            <td class="py-3 px-4 text-right space-x-1">
+              <button onclick="addToCart(${p.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="Enviar a Caja/Cotizador">
+                <i class="fa-solid fa-cart-plus"></i>
+              </button>
+              <button onclick="openProductModal(${p.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs transition" title="Editar">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="deleteProduct(${p.id})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg text-xs transition" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPOSCatalog() {
+      const q = (document.getElementById('pos-search')?.value || '').toLowerCase();
+      const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+      );
+
+      const grid = document.getElementById('pos-catalog-grid');
+      grid.innerHTML = filtered.map(p => `
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-400 transition flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start gap-2">
+              <span class="text-[10px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600">${p.sku}</span>
+              <span class="text-[11px] font-bold ${p.stock > 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                Stock: ${p.stock} ${p.unit}
+              </span>
+            </div>
+            <h4 class="font-bold text-sm text-slate-900 mt-1">${p.name}</h4>
+            <p class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-location-dot text-amber-500 mr-1"></i>${p.location}</p>
+          </div>
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
+            <div>
+              <span class="text-base font-extrabold text-slate-900">${formatCLP(p.price)}</span>
+              <span class="text-xs text-slate-500">/${p.unit}</span>
+            </div>
+            <button onclick="addToCart(${p.id})" ${p.stock <= 0 ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl text-xs font-bold ${p.stock > 0 ? 'bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'} transition">
+              + Agregar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(productId) {
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+      const existing = cart.find(item => item.id === productId);
+      if (existing) {
+        existing.qty = Math.round((existing.qty + 1) * 100) / 100;
+      } else {
+        cart.push({ id: prod.id, sku: prod.sku, name: prod.name, price: prod.price, unit: prod.unit, qty: 1 });
+      }
+      renderCart();
+    }
+
+    function updateCartQty(productId, newQty) {
+      const qty = parseFloat(newQty);
+      if (isNaN(qty) || qty <= 0) {
+        cart = cart.filter(i => i.id !== productId);
+      } else {
+        const item = cart.find(i => i.id === productId);
+        if (item) item.qty = qty;
+      }
+      renderCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      renderCart();
+    }
+
+    function renderCart() {
+      const badge = document.getElementById('cart-badge');
+      if (cart.length > 0) {
+        badge.textContent = cart.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      const container = document.getElementById('cart-items-container');
+      if (cart.length === 0) {
+        container.innerHTML = `<div class="py-10 text-center text-slate-400 text-xs">Selecciona productos del catálogo para armar una venta o cotización.</div>`;
+      } else {
+        container.innerHTML = cart.map(item => `
+          <div class="pt-2 flex items-center justify-between gap-2 text-xs">
+            <div class="flex-1">
+              <div class="font-bold text-slate-900">${item.name}</div>
+              <div class="text-slate-400">${formatCLP(item.price)} por ${item.unit}</div>
+            </div>
+            <div class="flex items-center gap-1">
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                value="${item.qty}"
+                onchange="updateCartQty(${item.id}, this.value)"
+                class="w-16 px-2 py-1 border border-slate-300 rounded text-center font-bold"
+              />
+              <span class="text-slate-500 w-7">${item.unit}</span>
+            </div>
+            <div class="font-extrabold text-slate-900 w-20 text-right">
+              ${formatCLP(item.price * item.qty)}
+            </div>
+            <button onclick="updateCartQty(${item.id}, 0)" class="text-slate-400 hover:text-rose-500 px-1">
+              &times;
+            </button>
+          </div>
+        `).join('');
+      }
+
+      const rawSubtotal = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+      const discountPct = parseFloat(document.getElementById('pos-discount')?.value) || 0;
+      const finalTotal = Math.round(rawSubtotal * (1 - discountPct / 100));
+      const net = Math.round(finalTotal / 1.19);
+      const tax = finalTotal - net;
+
+      document.getElementById('cart-net').textContent = formatCLP(net);
+      document.getElementById('cart-tax').textContent = formatCLP(tax);
+      document.getElementById('cart-total').textContent = formatCLP(finalTotal);
+    }
+
+    function completeSale() {
+      if (cart.length === 0) return alert('Agrega al menos un producto al ticket.');
+
+      // Descontar stock
+      cart.forEach(item => {
+        const prod = products.find(p => p.id === item.id);
+        if (prod) {
+          prod.stock = Math.max(0, Math.round((prod.stock - item.qty) * 100) / 100);
+        }
+      });
+
+      const client = document.getElementById('client-name').value || 'Cliente Mostrador';
+      const totalStr = document.getElementById('cart-total').textContent;
+      const summary = cart.map(i => `${i.qty} ${i.unit} ${i.name}`).join(' + ');
+
+      movements.unshift({
+        date: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+        type: 'VENTA',
+        detail: summary,
+        client: client,
+        amount: totalStr
+      });
+
+      cart = [];
+      document.getElementById('client-name').value = '';
+      document.getElementById('client-doc').value = '';
+      saveData();
+      alert(`✅ Venta registrada con éxito por ${totalStr}. El stock ha sido descontado automáticamente.`);
+    }
+
+    function printQuote() {
+      if (cart.length === 0) return alert('Agrega productos al ticket para generar la cotización.');
+      const client = document.getElementById('client-name').value || 'Cliente General';
+      const doc = document.getElementById('client-doc').value || '';
+      document.getElementById('print-date').textContent = 'Fecha: ' + new Date().toLocaleDateString('es-CL');
+      document.getElementById('print-client').textContent = `Cliente: ${client} ${doc ? '(' + doc + ')' : ''}`;
+      document.getElementById('print-total').textContent = document.getElementById('cart-total').textContent;
+
+      document.getElementById('print-items-body').innerHTML = cart.map(i => `
+        <tr>
+          <td class="py-1.5 font-mono">${i.sku}</td>
+          <td class="py-1.5 font-semibold">${i.name}</td>
+          <td class="py-1.5 text-center">${i.qty} ${i.unit}</td>
+          <td class="py-1.5 text-right">${formatCLP(i.price)}</td>
+          <td class="py-1.5 text-right font-bold">${formatCLP(i.price * i.qty)}</td>
+        </tr>
+      `).join('');
+
+      movements.unshift({
+        date: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+        type: 'COTIZACIÓN',
+        detail: `Cotización formal (${cart.length} ítems)`,
+        client: client,
+        amount: document.getElementById('cart-total').textContent
+      });
+      saveData();
+      window.print();
+    }
+
+    function adjustStock(id, delta) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      p.stock = Math.max(0, Math.round((p.stock + delta) * 100) / 100);
+      saveData();
+    }
+
+    function quickRestock(id) {
+      const p = products.find(x => x.id === id);
+      if (!p) return;
+      const qtyStr = prompt(`¿Cuántas unidades (${p.unit}) de "${p.name}" ingresaron a bodega?`, '10');
+      const qty = parseFloat(qtyStr);
+      if (!isNaN(qty) && qty > 0) {
+        p.stock = Math.round((p.stock + qty) * 100) / 100;
+        movements.unshift({
+          date: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+          type: 'INGRESO',
+          detail: `Reposición: +${qty} ${p.unit} de ${p.name}`,
+          client: p.supplier || 'Bodega',
+          amount: `+${qty} ${p.unit}`
+        });
+        saveData();
+      }
+    }
+
+    function openProductModal(id = null) {
+      const modal = document.getElementById('product-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      if (id) {
+        const p = products.find(x => x.id === id);
+        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen text-amber-400"></i> Editar Producto`;
+        document.getElementById('prod-id').value = p.id;
+        document.getElementById('prod-sku').value = p.sku;
+        document.getElementById('prod-name').value = p.name;
+        document.getElementById('prod-category').value = p.category;
+        document.getElementById('prod-unit').value = p.unit;
+        document.getElementById('prod-location').value = p.location;
+        document.getElementById('prod-cost').value = p.cost;
+        document.getElementById('prod-price').value = p.price;
+        document.getElementById('prod-stock').value = p.stock;
+        document.getElementById('prod-min').value = p.minStock;
+        document.getElementById('prod-supplier').value = p.supplier || '';
+      } else {
+        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-box-open text-amber-400"></i> Nuevo Producto Ferretero`;
+        document.getElementById('product-form').reset();
+        document.getElementById('prod-id').value = '';
+      }
+      updateMarginPreview();
+    }
+
+    function closeProductModal() {
+      const modal = document.getElementById('product-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function updateMarginPreview() {
+      const cost = parseFloat(document.getElementById('prod-cost').value) || 0;
+      const price = parseFloat(document.getElementById('prod-price').value) || 0;
+      const diff = price - cost;
+      const pct = cost > 0 ? Math.round((diff / cost) * 100) : 0;
+      document.getElementById('margin-preview').textContent = `${pct}% (${formatCLP(diff)})`;
+    }
+
+    function saveProduct(e) {
+      e.preventDefault();
+      const idVal = document.getElementById('prod-id').value;
+      const itemData = {
+        id: idVal ? parseInt(idVal) : Date.now(),
+        sku: document.getElementById('prod-sku').value.trim(),
+        name: document.getElementById('prod-name').value.trim(),
+        category: document.getElementById('prod-category').value,
+        unit: document.getElementById('prod-unit').value,
+        location: document.getElementById('prod-location').value.trim(),
+        cost: parseFloat(document.getElementById('prod-cost').value) || 0,
+        price: parseFloat(document.getElementById('prod-price').value) || 0,
+        stock: parseFloat(document.getElementById('prod-stock').value) || 0,
+        minStock: parseFloat(document.getElementById('prod-min').value) || 0,
+        supplier: document.getElementById('prod-supplier').value.trim()
+      };
+
+      if (idVal) {
+        const idx = products.findIndex(p => p.id === parseInt(idVal));
+        if (idx > -1) products[idx] = itemData;
+      } else {
+        products.unshift(itemData);
+      }
+      closeProductModal();
+      saveData();
+    }
+
+    function deleteProduct(id) {
+      if (confirm('¿Eliminar este producto del inventario?')) {
+        products = products.filter(p => p.id !== id);
+        saveData();
+      }
+    }
+
+    function renderMovements() {
+      const tbody = document.getElementById('movements-table-body');
+      tbody.innerHTML = movements.map(m => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4 text-xs text-slate-500">${m.date}</td>
+          <td class="py-3 px-4">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${
+              m.type === 'VENTA' ? 'bg-emerald-100 text-emerald-800' :
+              m.type === 'INGRESO' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+            }">${m.type}</span>
+          </td>
+          <td class="py-3 px-4 font-medium text-slate-800">${m.detail}</td>
+          <td class="py-3 px-4 text-xs text-slate-600">${m.client}</td>
+          <td class="py-3 px-4 text-right font-bold text-slate-900">${m.amount}</td>
+        </tr>
+      `).join('');
+    }
+
+    function exportCSV() {
+      const headers = ['SKU', 'Producto', 'Categoria', 'Unidad', 'Ubicacion', 'Costo', 'PrecioVenta', 'Stock', 'StockMinimo', 'Proveedor'];
+      const rows = products.map(p => [
+        `"${p.sku}"`, `"${p.name}"`, `"${p.category}"`, `"${p.unit}"`, `"${p.location}"`,
+        p.cost, p.price, p.stock, p.minStock, `"${p.supplier || ''}"`
+      ].join(','));
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI(csvContent));
+      link.setAttribute('download', 'inventario_ferreteria_v1.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderInventory();
+      renderPOSCatalog();
+      renderCart();
+      renderMovements();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
+

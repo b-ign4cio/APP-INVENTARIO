@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>FerreControl PRO v1.0 — Vista Móvil (Solo Lectura)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen select-none">
+
+  <!-- Barra Superior Fija (App Header iOS / Android) -->
+  <header class="sticky top-0 z-40 bg-slate-900 text-white shadow-md">
+    <!-- Cinta Modo Solo Lectura -->
+    <div class="bg-amber-500 text-slate-950 px-3 py-1 text-[11px] font-bold flex items-center justify-between">
+      <span class="flex items-center gap-1.5">
+        <i class="fa-solid fa-eye"></i> MODO VISTA MÓVIL (SOLO LECTURA)
+      </span>
+      <span class="bg-slate-950 text-amber-400 px-1.5 py-0.5 rounded text-[10px] uppercase">v1.0</span>
+    </div>
+
+    <div class="px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-base font-black shadow">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-extrabold leading-tight flex items-center gap-1.5">
+            FerreControl <span class="text-amber-400">PRO</span>
+          </h1>
+          <p class="text-[11px] text-slate-400">Demo Interactiva para iPhone y Android</p>
+        </div>
+      </div>
+      <span id="current-section-badge" class="text-[11px] font-semibold bg-slate-800 text-amber-400 border border-slate-700 px-2.5 py-1 rounded-full">
+        Resumen
+      </span>
+    </div>
+  </header>
+
+  <!-- Contenido Principal Móvil -->
+  <main class="max-w-lg mx-auto px-3.5 py-4 space-y-4">
+
+    <!-- ==================== 1. RESUMEN (DASHBOARD) ==================== -->
+    <section id="mob-dashboard" class="space-y-4">
+      <div class="bg-slate-900 text-white p-4 rounded-2xl shadow-sm border border-slate-800">
+        <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+          <span>VALOR VENTA ESTIMADO EN BODEGA</span>
+          <span class="text-emerald-400 font-bold"><i class="fa-solid fa-lock mr-1"></i>Vista Demo</span>
+        </div>
+        <p id="mob-kpi-sale" class="text-3xl font-extrabold text-amber-400">$0</p>
+        <p id="mob-kpi-profit" class="text-xs text-emerald-400 font-semibold mt-1">Ganancia proyectada: $0</p>
+
+        <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800 text-center">
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase">Productos</p>
+            <p id="mob-kpi-skus" class="text-base font-extrabold text-white">12 SKUs</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase">Costo Total</p>
+            <p id="mob-kpi-cost" class="text-base font-extrabold text-white">$0</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-rose-400 uppercase font-bold">Stock Crítico</p>
+            <p id="mob-kpi-low" class="text-base font-extrabold text-rose-400">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertas de Stock Crítico -->
+      <div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-200">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Alertas de Stock Crítico
+            </h2>
+            <p class="text-[11px] text-slate-500">Productos bajo el mínimo configurado</p>
+          </div>
+          <button onclick="switchMobileTab('inventory'); setStockFilter('low');" class="text-xs font-bold text-amber-600">
+            Ver todos →
+          </button>
+        </div>
+        <div id="mob-low-stock-list" class="space-y-2.5"></div>
+      </div>
+
+      <!-- Valorizado por Rubro -->
+      <div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-200">
+        <h2 class="font-bold text-sm text-slate-900 flex items-center gap-1.5 mb-1">
+          <i class="fa-solid fa-layer-group text-amber-500"></i> Distribución por Rubro Ferretero
+        </h2>
+        <p class="text-[11px] text-slate-500 mb-3">Capital distribuido por categoría de productos</p>
+        <div id="mob-category-bars" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. INVENTARIO (SOLO LECTURA) ==================== -->
+    <section id="mob-inventory" class="space-y-3 hidden">
+      <!-- Buscador y Filtros Táctiles -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200 space-y-2.5 sticky top-[76px] z-30">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+          <input
+            type="text"
+            id="mob-search"
+            oninput="renderMobileInventory()"
+            placeholder="Buscar producto, medida (1/2), pasillo o SKU..."
+            class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <select id="mob-cat-filter" onchange="renderMobileInventory()" class="w-full py-2 px-2.5 rounded-xl border border-slate-300 text-xs bg-white font-medium">
+            <option value="all">Todas las Categorías</option>
+            <option value="Herramientas">Herramientas</option>
+            <option value="Tornillería y Fijaciones">Tornillería (Granel)</option>
+            <option value="Gasfitería y Agua">Gasfitería y Agua</option>
+            <option value="Electricidad e Iluminación">Electricidad</option>
+            <option value="Pinturas y Químicos">Pinturas y Químicos</option>
+            <option value="Construcción">Construcción</option>
+            <option value="Seguridad (EPP)">Seguridad (EPP)</option>
+          </select>
+
+          <select id="mob-stock-filter" onchange="renderMobileInventory()" class="w-full py-2 px-2.5 rounded-xl border border-slate-300 text-xs bg-white font-medium">
+            <option value="all">Todos los Stocks</option>
+            <option value="low">⚠️ Stock Bajo / Crítico</option>
+            <option value="out">🚨 Agotados (0)</option>
+            <option value="ok">✅ Stock Óptimo</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+          <span id="mob-inv-count">Mostrando 12 productos</span>
+          <span class="text-slate-400"><i class="fa-solid fa-lock mr-1"></i>Solo lectura</span>
+        </div>
+      </div>
+
+      <!-- Tarjetas de Productos -->
+      <div id="mob-inventory-cards" class="space-y-2.5"></div>
+    </section>
+
+    <!-- ==================== 3. CAJA / COTIZADOR (SOLO LECTURA) ==================== -->
+    <section id="mob-pos" class="space-y-4 hidden">
+      <!-- Ticket de Venta / Cotización -->
+      <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+        <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-sm flex items-center gap-2">
+              <i class="fa-solid fa-cart-shopping text-amber-400"></i> Ticket de Venta / Cotización
+            </h3>
+            <p class="text-[11px] text-slate-400">Soporta decimales para venta por metro o kilo (ej. 1.5)</p>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 border-b border-slate-200 grid grid-cols-2 gap-2 text-xs">
+          <div class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600">Maestro Juan Pérez</div>
+          <div class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600">76.543.210-K</div>
+        </div>
+
+        <div class="p-4 divide-y divide-slate-100 space-y-3 text-xs">
+          <div class="flex justify-between items-center pt-1">
+            <div>
+              <span class="font-bold text-slate-900 block">Cable Eléctrico EVA Libre Halógeno 2.5 mm² Rojo</span>
+              <span class="text-[11px] text-slate-500">12.5 mt × $950/mt</span>
+            </div>
+            <span class="font-extrabold text-slate-900">$11.875</span>
+          </div>
+
+          <div class="flex justify-between items-center pt-3">
+            <div>
+              <span class="font-bold text-slate-900 block">Clavo Corriente 3 Pulgadas (Venta a Granel)</span>
+              <span class="text-[11px] text-slate-500">2.5 kg × $2.990/kg</span>
+            </div>
+            <span class="font-extrabold text-slate-900">$7.475</span>
+          </div>
+
+          <div class="flex justify-between items-center pt-3">
+            <div>
+              <span class="font-bold text-slate-900 block">Cemento Polpaico / Biobío Alta Resistencia 25 Kg</span>
+              <span class="text-[11px] text-slate-500">10 saco × $5.490/saco</span>
+            </div>
+            <span class="font-extrabold text-slate-900">$54.900</span>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-1.5 text-xs">
+          <div class="flex justify-between text-slate-600">
+            <span>Descuento Maestro / Frecuente (%):</span>
+            <span class="font-bold">5%</span>
+          </div>
+          <div class="flex justify-between text-slate-500">
+            <span>Subtotal Neto:</span>
+            <span>$59.277</span>
+          </div>
+          <div class="flex justify-between text-slate-500">
+            <span>IVA (19% incluido):</span>
+            <span>$11.263</span>
+          </div>
+          <div class="flex justify-between text-base font-extrabold text-slate-900 pt-2 border-t border-slate-200">
+            <span>TOTAL A PAGAR:</span>
+            <span class="text-amber-600">$70.540</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catálogo Rápido de Mostrador -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200">
+        <label class="block text-[11px] font-bold uppercase text-slate-400 mb-2">Catálogo Rápido de Mostrador</label>
+        <div id="mob-pos-catalog" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. HISTORIAL / KARDEX ==================== -->
+    <section id="mob-movements" class="space-y-3 hidden">
+      <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200">
+        <h2 class="font-bold text-sm text-slate-900">Historial de Movimientos (Kardex)</h2>
+        <p class="text-[11px] text-slate-500 mb-3">Trazabilidad completa de ventas, ingresos de facturas y cotizaciones</p>
+        <div id="mob-movements-list" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Barra de Navegación Inferior Tipo App Nativa (iPhone / Android) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md text-slate-400 border-t border-slate-800 safe-bottom">
+    <div class="max-w-lg mx-auto grid grid-cols-4 h-16">
+      <button onclick="switchMobileTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center justify-center gap-1 text-amber-400 font-bold">
+        <i class="fa-solid fa-chart-pie text-base"></i>
+        <span class="text-[10px]">Resumen</span>
+      </button>
+      <button onclick="switchMobileTab('inventory')" id="nav-inventory" class="flex flex-col items-center justify-center gap-1">
+        <i class="fa-solid fa-boxes-stacked text-base"></i>
+        <span class="text-[10px]">Inventario</span>
+      </button>
+      <button onclick="switchMobileTab('pos')" id="nav-pos" class="flex flex-col items-center justify-center gap-1">
+        <i class="fa-solid fa-cash-register text-base"></i>
+        <span class="text-[10px]">Caja / Cotizador</span>
+      </button>
+      <button onclick="switchMobileTab('movements')" id="nav-movements" class="flex flex-col items-center justify-center gap-1">
+        <i class="fa-solid fa-clock-rotate-left text-base"></i>
+        <span class="text-[10px]">Historial</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    // Datos de demostración idénticos a la versión PC (100% Solo Lectura)
+    const PRODUCTS = [
+      { id: 1, sku: 'HER-001', name: 'Taladro Percutor Inalámbrico 20V + 2 Baterías', category: 'Herramientas', unit: 'un', location: 'Vitrina A - Nivel 1', cost: 42000, price: 64990, stock: 6, minStock: 3, supplier: 'Makita / DeWalt Dist.' },
+      { id: 2, sku: 'HER-002', name: 'Martillo Carpintero Uña Curva Mango Fibra 16 oz', category: 'Herramientas', unit: 'un', location: 'Pasillo 1 - Gancho C2', cost: 4500, price: 7990, stock: 18, minStock: 6, supplier: 'Stanley Tools' },
+      { id: 3, sku: 'TOR-101', name: 'Clavo Corriente 3 Pulgadas (Venta a Granel)', category: 'Tornillería y Fijaciones', unit: 'kg', location: 'Pasillo 2 - Cajón Granel 4', cost: 1650, price: 2990, stock: 4.5, minStock: 15, supplier: 'Inchalam' },
+      { id: 4, sku: 'TOR-102', name: 'Tornillo Volcanita / Drywall 6 x 1-1/4" Negro (Caja 500u)', category: 'Tornillería y Fijaciones', unit: 'caja', location: 'Pasillo 2 - Estante B3', cost: 3800, price: 6990, stock: 12, minStock: 5, supplier: 'Mamut Fijaciones' },
+      { id: 5, sku: 'GAS-201', name: 'Llave de Paso Agua Esférica Bronce 1/2" HI-HI', category: 'Gasfitería y Agua', unit: 'un', location: 'Pasillo 3 - Gaveta G12', cost: 3200, price: 5990, stock: 2, minStock: 8, supplier: 'Fas / Nibsa' },
+      { id: 6, sku: 'GAS-202', name: 'Cinta Teflón Alta Densidad Gasfitería 3/4" x 12m', category: 'Gasfitería y Agua', unit: 'un', location: 'Mostrador Caja - Gancho 1', cost: 350, price: 990, stock: 45, minStock: 20, supplier: 'Vinilit' },
+      { id: 7, sku: 'ELE-301', name: 'Cable Eléctrico EVA Libre Halógeno 2.5 mm² Rojo', category: 'Electricidad e Iluminación', unit: 'mt', location: 'Pasillo 4 - Carrete R2', cost: 520, price: 950, stock: 18.5, minStock: 50, supplier: 'Covisa' },
+      { id: 8, sku: 'ELE-302', name: 'Enchufe Doble Embutido 10A/16A Blanco Certificado', category: 'Electricidad e Iluminación', unit: 'un', location: 'Pasillo 4 - Estante E1', cost: 1900, price: 3690, stock: 24, minStock: 10, supplier: 'BTicino' },
+      { id: 9, sku: 'PIN-401', name: 'Esmalte al Agua Blanco Semibrillo Galón (3.78 Lt)', category: 'Pinturas y Químicos', unit: 'un', location: 'Pasillo 5 - Nivel Piso', cost: 16500, price: 25990, stock: 9, minStock: 4, supplier: 'Ceresita / Sipa' },
+      { id: 10, sku: 'PIN-402', name: 'Silicona Neutra Transparente Antihongos 280ml', category: 'Pinturas y Químicos', unit: 'un', location: 'Pasillo 5 - Estante C1', cost: 2400, price: 4490, stock: 3, minStock: 10, supplier: 'Soudal / Sika' },
+      { id: 11, sku: 'CON-501', name: 'Cemento Polpaico / Biobío Alta Resistencia 25 Kg', category: 'Construcción', unit: 'saco', location: 'Bodega Patio - Pallet 1', cost: 3950, price: 5490, stock: 65, minStock: 30, supplier: 'Polpaico' },
+      { id: 12, sku: 'SEG-601', name: 'Guante Cabritilla Corto Reforzado Maestro', category: 'Seguridad (EPP)', unit: 'un', location: 'Pasillo 1 - Cesto EPP', cost: 1400, price: 2990, stock: 0, minStock: 12, supplier: 'Steelpro' }
+    ];
+
+    const MOVEMENTS = [
+      { date: 'Hoy, 10:15', type: 'VENTA', detail: '10 mt Cable EVA 2.5mm² + 2 Enchufes BTicino', client: 'Maestro Juan Pérez', amount: '$16.880' },
+      { date: 'Hoy, 09:30', type: 'INGRESO', detail: '+40 sacos Cemento 25 Kg (Factura #45092)', client: 'Bodega Central', amount: '+40 sacos' },
+      { date: 'Ayer, 17:45', type: 'COTIZACIÓN', detail: 'Materiales Gasfitería y Pintura Casa', client: 'Constructora Andes SpA', amount: '$184.500' },
+      { date: 'Ayer, 12:10', type: 'VENTA', detail: '2.5 kg Clavo Corriente 3" + 1 Martillo 16 oz', client: 'Cliente Mostrador', amount: '$15.465' }
+    ];
+
+    const SECTION_NAMES = {
+      dashboard: 'Resumen',
+      inventory: 'Inventario',
+      pos: 'Caja / Cotizador',
+      movements: 'Historial'
+    };
+
+    function formatCLP(num) {
+      return '$' + Math.round(num).toLocaleString('es-CL');
+    }
+
+    function switchMobileTab(tab) {
+      ['dashboard', 'inventory', 'pos', 'movements'].forEach(t => {
+        document.getElementById('mob-' + t).classList.add('hidden');
+        const btn = document.getElementById('nav-' + t);
+        btn.className = 'flex flex-col items-center justify-center gap-1 text-slate-400';
+      });
+      document.getElementById('mob-' + tab).classList.remove('hidden');
+      document.getElementById('nav-' + tab).className = 'flex flex-col items-center justify-center gap-1 text-amber-400 font-bold';
+      document.getElementById('current-section-badge').textContent = SECTION_NAMES[tab];
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setStockFilter(val) {
+      document.getElementById('mob-stock-filter').value = val;
+      renderMobileInventory();
+    }
+
+    function renderMobileDashboard() {
+      const totalCost = PRODUCTS.reduce((s, p) => s + (p.cost * p.stock), 0);
+      const totalSale = PRODUCTS.reduce((s, p) => s + (p.price * p.stock), 0);
+      const lowItems = PRODUCTS.filter(p => p.stock <= p.minStock);
+
+      document.getElementById('mob-kpi-skus').textContent = `${PRODUCTS.length} SKUs`;
+      document.getElementById('mob-kpi-cost').textContent = formatCLP(totalCost);
+      document.getElementById('mob-kpi-sale').textContent = formatCLP(totalSale);
+      document.getElementById('mob-kpi-profit').textContent = `Ganancia proyectada: ${formatCLP(totalSale - totalCost)}`;
+      document.getElementById('mob-kpi-low').textContent = `${lowItems.length} ítems`;
+
+      document.getElementById('mob-low-stock-list').innerHTML = lowItems.map(p => `
+        <div class="p-3 rounded-xl bg-rose-50/70 border border-rose-200 flex items-center justify-between gap-2">
+          <div>
+            <span class="text-[10px] font-mono text-rose-700 font-bold">${p.sku}</span>
+            <h4 class="text-xs font-bold text-slate-900 leading-snug">${p.name}</h4>
+            <p class="text-[11px] text-slate-600 mt-0.5"><i class="fa-solid fa-location-dot text-amber-600 mr-1"></i>${p.location}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="px-2 py-1 rounded-full text-[11px] font-extrabold ${p.stock === 0 ? 'bg-rose-600 text-white' : 'bg-rose-200 text-rose-800'}">
+              ${p.stock} ${p.unit}
+            </span>
+            <p class="text-[10px] text-rose-600 font-semibold mt-1">Mín: ${p.minStock} ${p.unit}</p>
+          </div>
+        </div>
+      `).join('');
+
+      const catMap = {};
+      PRODUCTS.forEach(p => {
+        catMap[p.category] = (catMap[p.category] || 0) + (p.price * p.stock);
+      });
+
+      document.getElementById('mob-category-bars').innerHTML = Object.entries(catMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, val]) => {
+          const pct = Math.round((val / totalSale) * 100);
+          return `
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span class="text-slate-700">${cat}</span>
+                <span class="text-slate-900 font-bold">${formatCLP(val)} (${pct}%)</span>
+              </div>
+              <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+    }
+
+    function renderMobileInventory() {
+      const q = (document.getElementById('mob-search')?.value || '').toLowerCase();
+      const cat = document.getElementById('mob-cat-filter')?.value || 'all';
+      const st = document.getElementById('mob-stock-filter')?.value || 'all';
+
+      const filtered = PRODUCTS.filter(p => {
+        const matchQ = p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || p.location.toLowerCase().includes(q);
+        const matchCat = cat === 'all' || p.category === cat;
+        let matchSt = true;
+        if (st === 'low') matchSt = p.stock <= p.minStock;
+        if (st === 'out') matchSt = p.stock === 0;
+        if (st === 'ok') matchSt = p.stock > p.minStock;
+        return matchQ && matchCat && matchSt;
+      });
+
+      document.getElementById('mob-inv-count').textContent = `Mostrando ${filtered.length} de ${PRODUCTS.length} productos`;
+
+      document.getElementById('mob-inventory-cards').innerHTML = filtered.map(p => {
+        const isLow = p.stock <= p.minStock;
+        const marginPct = Math.round(((p.price - p.cost) / p.cost) * 100);
+        return `
+          <div class="bg-white p-3.5 rounded-2xl shadow-xs border ${isLow ? 'border-rose-300' : 'border-slate-200'} space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-mono bg-slate-100 px-2 py-0.5 rounded font-bold text-slate-600">${p.sku}</span>
+                  <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">${p.category}</span>
+                </div>
+                <h3 class="font-bold text-sm text-slate-900 mt-1 leading-snug">${p.name}</h3>
+              </div>
+              <span class="shrink-0 px-2.5 py-1 rounded-full text-xs font-extrabold ${p.stock === 0 ? 'bg-rose-600 text-white' : isLow ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
+                ${p.stock} ${p.unit}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs bg-amber-50/80 border border-amber-200/80 px-2.5 py-1.5 rounded-xl">
+              <span class="font-medium text-slate-700">
+                <i class="fa-solid fa-location-dot text-amber-600 mr-1"></i>${p.location}
+              </span>
+              <span class="text-[11px] text-slate-500">${p.supplier}</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
+              <div>
+                <span class="text-slate-400">Costo: </span>
+                <span class="font-semibold text-slate-600">${formatCLP(p.cost)}/${p.unit}</span>
+                <span class="text-emerald-600 font-bold ml-1">(+${marginPct}%)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] text-slate-400 mr-1">Venta:</span>
+                <span class="text-base font-extrabold text-slate-900">${formatCLP(p.price)}</span>
+                <span class="text-[11px] text-slate-500">/${p.unit}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMobileMovements() {
+      document.getElementById('mob-movements-list').innerHTML = MOVEMENTS.map(m => `
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                m.type === 'VENTA' ? 'bg-emerald-100 text-emerald-800' :
+                m.type === 'INGRESO' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+              }">${m.type}</span>
+              <span class="text-[11px] text-slate-400">${m.date}</span>
+            </div>
+            <p class="text-xs font-bold text-slate-900 mt-1">${m.detail}</p>
+            <p class="text-[11px] text-slate-500">Cliente/Origen: ${m.client}</p>
+          </div>
+          <div class="text-right font-extrabold text-xs text-slate-900 shrink-0">
+            ${m.amount}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderMobileDashboard();
+      renderMobileInventory();
+      renderMobileMovements();
+      document.getElementById('mob-pos-catalog').innerHTML = PRODUCTS.map(p => `
+        <div class="p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+          <div>
+            <span class="text-[10px] font-mono text-slate-400">${p.sku}</span>
+            <p class="font-bold text-slate-900">${p.name}</p>
+            <p class="text-[11px] text-slate-500">${p.location}</p>
+          </div>
+          <div class="text-right shrink-0 ml-2">
+            <p class="font-extrabold text-slate-900">${formatCLP(p.price)}<span class="text-[10px] font-normal text-slate-500">/${p.unit}</span></p>
+            <span class="text-[10px] font-bold ${p.stock > 0 ? 'text-emerald-600' : 'text-rose-600'}">Stock: ${p.stock} ${p.unit}</span>
+          </div>
+        </div>
+      `).join('');
+    });
+  </script>
+</body>
+</html>
+
